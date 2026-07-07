@@ -18,7 +18,7 @@
       "topics_already_covered": ["basic SQL", "primary keys"]
     },
     "expectations": {
-      "must_cover": ["indexes", "B-tree", "EXPLAIN", "query patterns"],
+      "must_cover": ["indexes", "B-tree", "EXPLAIN", "composite index"],
       "must_not_reteach": ["basic SQL", "primary keys"],
       "expected_level": "beginner-heavy",
       "min_model_score": 3.75
@@ -43,7 +43,7 @@
       "topics_already_covered": ["basic SQL", "primary keys"]
     },
     "expectations": {
-      "must_cover": ["indexes", "B-tree", "EXPLAIN", "query patterns"],
+      "must_cover": ["indexes", "B-tree", "EXPLAIN", "composite index"],
       "must_not_reteach": ["basic SQL", "primary keys"],
       "expected_level": "advanced-heavy",
       "min_model_score": 3.75
