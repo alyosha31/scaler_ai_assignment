@@ -200,12 +200,6 @@ def evaluate_pair(
             passed_gate=True,
         )
 
-
-def prompt_hash() -> str:
-    prompt_file = Path("src/scaler_script_pipeline/services/prompts.py")
-    if not prompt_file.exists():
-        return "unknown"
-    return hashlib.sha256(prompt_file.read_bytes()).hexdigest()[:12]
     try:
         result = judge.judge_adaptivity(
             generated[pair.beginner_case_id].project,
@@ -226,3 +220,10 @@ def prompt_hash() -> str:
             passed_gate=False,
             error=str(exc),
         )
+
+
+def prompt_hash() -> str:
+    prompt_file = Path("src/scaler_script_pipeline/services/prompts.py")
+    if not prompt_file.exists():
+        return "unknown"
+    return hashlib.sha256(prompt_file.read_bytes()).hexdigest()[:12]

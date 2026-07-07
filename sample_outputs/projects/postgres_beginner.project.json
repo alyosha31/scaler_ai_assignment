@@ -1,0 +1,343 @@
+{
+  "id": "project_83f71a5c0379",
+  "brief": {
+    "topic": "Indexing in PostgreSQL",
+    "agenda": [
+      "Why indexes exist",
+      "B-tree index mechanics"
+    ],
+    "beginner_percentage": 70,
+    "advanced_percentage": 30,
+    "duration_minutes": 45,
+    "content_percentage": 60,
+    "code_percentage": 40,
+    "topics_already_covered": [
+      "basic SQL",
+      "primary keys"
+    ]
+  },
+  "validation": {
+    "is_valid": true,
+    "warnings": [],
+    "errors": [],
+    "normalized_brief": {
+      "topic": "Indexing in PostgreSQL",
+      "agenda": [
+        "Why indexes exist",
+        "B-tree index mechanics"
+      ],
+      "beginner_percentage": 70,
+      "advanced_percentage": 30,
+      "duration_minutes": 45,
+      "content_percentage": 60,
+      "code_percentage": 40,
+      "topics_already_covered": [
+        "basic SQL",
+        "primary keys"
+      ]
+    }
+  },
+  "outline": {
+    "id": "outline-pg-indexing-01",
+    "topic": "Indexing in PostgreSQL",
+    "total_duration_minutes": 45,
+    "audience_calibration": "70% beginner / 30% advanced. Lead with intuitive, vocabulary-scaffolded explanations and frequent comprehension checks. Layer in tradeoff discussions and internals for advanced learners as optional depth, without slowing the core narrative. Assume comfort with basic SQL and primary keys (do not re-teach them).",
+    "target_content_minutes": 27,
+    "target_code_minutes": 18,
+    "segments": [
+      {
+        "id": "seg-1-why-indexes",
+        "order": 1,
+        "agenda_item": "Why indexes exist",
+        "title": "Why Indexes Exist: The Cost of Finding Rows",
+        "duration_minutes": 20,
+        "content_minutes": 13,
+        "code_minutes": 7,
+        "learning_objective": "Learners can explain why indexes exist by contrasting a sequential scan against an indexed lookup and identifying when an index helps.",
+        "concepts_introduced": [
+          "sequential scan vs index scan",
+          "query cost intuition",
+          "selectivity",
+          "index as a lookup structure",
+          "read speed vs write/storage cost tradeoff"
+        ],
+        "concepts_assumed": [
+          "basic SQL",
+          "primary keys",
+          "SELECT/WHERE filtering"
+        ],
+        "concepts_reinforced": [
+          "primary keys (as an implicitly indexed column)"
+        ],
+        "teaching_strategy": "Open with a relatable analogy (book index / phone contacts) to scaffold vocabulary for beginners. Frame the core problem: how does the DB find rows matching a WHERE clause? Demonstrate a sequential scan on a large table, then create an index and show the change. Use EXPLAIN output as the concrete evidence. Pause for 2 comprehension checks. For advanced 30%, briefly note the read-speed vs write/storage tradeoff to preview the 'no free lunch' theme.",
+        "example_plan": "Use a 'users' table with ~1M rows. Run SELECT * FROM users WHERE email = '...' and show EXPLAIN ANALYZE reporting a Seq Scan. Callback: point out that filtering by primary key id is already fast, motivating the question 'why?'. Then CREATE INDEX on email and re-run EXPLAIN ANALYZE to show the improvement.",
+        "activity_plan": [
+          "Poll: 'Will a WHERE on a non-indexed column scan the whole table?' (predict before running)",
+          "Quick check: ask learners to identify Seq Scan vs Index Scan in EXPLAIN output",
+          "Discussion prompt for advanced: 'What does an index cost us that a plain table doesn't?'"
+        ],
+        "transition_in": "Welcome learners, confirm they're comfortable with basic SQL and primary keys, and pose the driving question: what actually happens when you run a WHERE query?",
+        "transition_out": "We've seen that an index makes lookups fast — but we treated it as a black box. Next, let's open that box and see how a B-tree actually works.",
+        "rationale": "Motivation-first ordering suits a beginner-heavy audience: understanding the 'why' before the 'how' anchors the mechanics segment. The slightly higher content ratio here fits conceptual framing, with just enough EXPLAIN code to make the payoff tangible."
+      },
+      {
+        "id": "seg-2-btree-mechanics",
+        "order": 2,
+        "agenda_item": "B-tree index mechanics",
+        "title": "Inside the B-tree: How PostgreSQL Finds Rows Fast",
+        "duration_minutes": 25,
+        "content_minutes": 14,
+        "code_minutes": 11,
+        "learning_objective": "Learners can describe how a B-tree index enables logarithmic lookups, explain why sorted structure supports range and ordering queries, and reason about when a B-tree index will or won't be used.",
+        "concepts_introduced": [
+          "B-tree structure (root, internal nodes, leaf nodes)",
+          "logarithmic search / height",
+          "ordered keys and range scans",
+          "index use for ORDER BY and range predicates",
+          "composite indexes and column order",
+          "cases where the planner skips the index"
+        ],
+        "concepts_assumed": [
+          "basic SQL",
+          "primary keys",
+          "sequential scan vs index scan (from Segment 1)"
+        ],
+        "concepts_reinforced": [
+          "selectivity",
+          "read vs write tradeoff",
+          "EXPLAIN reading"
+        ],
+        "teaching_strategy": "Build the mental model incrementally: draw/describe a small B-tree, then narrate a lookup path step by step (scaffolds vocabulary for beginners). Connect the sorted structure to why range queries and ORDER BY benefit. Move into hands-on EXPLAIN comparisons for equality, range, and sort queries. For the advanced 30%, add composite index column-order tradeoffs and a demonstration where the planner chooses a Seq Scan despite an index (low selectivity). Close with a short check-for-understanding before recap.",
+        "example_plan": "Reuse the 'users' table. (1) Equality lookup traversing the tree. (2) Range query WHERE created_at BETWEEN ... showing an index range scan. (3) ORDER BY created_at using the index to avoid a sort. (4) Advanced demo: a composite index on (last_name, first_name) and show why a query filtering only first_name may not use it; also show a low-selectivity predicate where planner picks Seq Scan.",
+        "activity_plan": [
+          "Trace-through: learners predict the leaf a search value lands in on a drawn B-tree",
+          "Check: 'Which of these queries can use the index — equality, range, ORDER BY, leading vs non-leading composite column?'",
+          "Advanced discussion: 'Why might a high-cardinality-looking query still trigger a Seq Scan?'"
+        ],
+        "transition_in": "Now that we know indexes speed up lookups, let's see the structure that makes it possible — the B-tree — and trace exactly how PostgreSQL walks it.",
+        "transition_out": "You can now explain not just that indexes help, but how a B-tree finds rows and when it won't be used. Let's recap and look at where to go next.",
+        "rationale": "This is the mechanics-heavy segment, so it earns more time and a higher code share for hands-on EXPLAIN experimentation. Concepts build directly on Segment 1's black-box index, and advanced content (composite order, planner skips) is layered as optional depth to serve the 30% without derailing beginners."
+      }
+    ],
+    "recap_plan": "Summarize the two-beat arc: (1) indexes exist to avoid scanning whole tables and trade write/storage cost for read speed; (2) B-trees give logarithmic, ordered lookups enabling equality, range, and sort queries. Re-show one EXPLAIN before/after as a visual anchor. Restate the key decision heuristic: index columns you frequently filter/sort on with good selectivity.",
+    "next_steps_plan": "Preview follow-on topics: other index types (hash, GIN, BRIN), multicolumn index design and covering indexes, index maintenance/bloat, and reading EXPLAIN ANALYZE cost/timing more deeply. Suggest a practice task: profile a slow query with EXPLAIN, add an appropriate index, and verify the plan change.",
+    "global_assumptions": [
+      "Learners can write and read basic SELECT/WHERE queries without instruction.",
+      "Learners understand primary keys and that they enforce uniqueness.",
+      "A PostgreSQL instance with a seeded large demo table is available for live EXPLAIN demos.",
+      "Learners have not previously seen EXPLAIN or index internals."
+    ],
+    "design_rationale": [
+      "Two segments map one-to-one to the two agenda items; no combination needed since no warnings were raised.",
+      "Durations sum to exactly 45 minutes (20 + 25).",
+      "Aggregate content 27 min / code 18 min matches the requested 60/40 ratio.",
+      "Motivation ('why') precedes mechanics ('how') to fit a 70% beginner audience.",
+      "Comprehension checks and analogies are front-loaded for beginners; tradeoff/internals discussions are tagged as advanced depth for the 30%.",
+      "Prior topics (basic SQL, primary keys) are assumed and used as callbacks rather than re-taught."
+    ],
+    "warnings": []
+  },
+  "segments": [
+    {
+      "id": "seg-1-why-indexes-draft",
+      "outline_id": "seg-1-why-indexes",
+      "duration_minutes": 20,
+      "content_minutes": 13,
+      "code_minutes": 7,
+      "instructor_narration": "Welcome back, everyone. Before we dive in, let me confirm where we are: you're all comfortable with basic SQL — writing SELECT statements, filtering with WHERE — and you've seen primary keys. Good. Today we build directly on top of that foundation.\n\nLet me start with a question that sounds almost too simple: when you run `SELECT * FROM users WHERE email = 'alice@example.com'`, what actually happens inside PostgreSQL? How does the database *find* that one row?\n\nHere's an analogy to anchor us. Imagine I hand you a 900-page book with no table of contents and no index at the back, and I ask you to find every mention of the word 'photosynthesis.' What do you have to do? You start at page one and read every single page until you reach the end. You can't stop early, because there might be a match on the last page. That exhaustive, page-by-page reading is what we call a **sequential scan** — the database reads every row in the table to check which ones match.\n\nNow imagine that same book *with* an index at the back. You flip to 'P', find 'photosynthesis — pages 44, 210, 388', and jump straight there. You skipped hundreds of pages. That back-of-the-book index is exactly what a database index is: a **separate lookup structure** that lets you find matching rows without reading the whole table.\n\nSo why does this matter? For a table with a hundred rows, a sequential scan is instant — who cares. But for a table with a million rows, reading every single one to answer one query is genuinely slow. That's the core problem indexes solve: the **cost of finding rows**.\n\nHere's a useful piece of intuition I want you to hold onto — we call it **query cost**. Every query has a cost, roughly proportional to how much work the database does. A sequential scan's cost grows with the size of the table: twice the rows, roughly twice the work. An index scan's cost is much flatter — it barely grows as the table gets bigger. That difference is the whole game.\n\nNow, a callback to primary keys, which you already know. When you query `WHERE id = 42` on a primary key, that's already fast. Why? Because a primary key is *automatically indexed* by PostgreSQL. You've been benefiting from an index this whole time without realizing it. The question we're really asking today is: what about all the *other* columns — like email — that aren't the primary key?\n\nLet's make this concrete. I've got a `users` table here with about a million rows. Let's watch the database actually do the work.\n\n[Run the live code steps here — poll first, then EXPLAIN before the index, then create the index, then EXPLAIN again.]\n\nSo what did we just see? Before the index: a Seq Scan reading through the whole table. After the index: an Index Scan that jumps almost straight to the row. Same query, dramatically less work.\n\nNow one concept that ties this together: **selectivity**. An index is most valuable when your filter is *selective* — when it matches only a small fraction of rows. Filtering to one user out of a million? Extremely selective, index shines. But if you filter on something that matches half the table — say `WHERE active = true` where most users are active — the database might decide the index isn't worth it and just scan everything anyway. Hold that thought; it comes back later.\n\nAnd for those of you who want to go deeper — here's the 'no free lunch' theme that runs through this entire topic. That index we created isn't free. It's a separate structure stored on disk, so it costs **storage**. And every time you INSERT, UPDATE, or DELETE a row, PostgreSQL has to update the index too — so it costs **write performance**. Indexes trade slower writes and more storage for faster reads. That tradeoff is a decision you make deliberately, not a switch you flip everywhere.\n\nSo to summarize: indexes exist because finding rows in a big table is expensive, and an index is a lookup structure that makes selective reads fast — at the cost of writes and storage.",
+      "live_code_steps": [
+        {
+          "order": 1,
+          "instruction": "Before running anything, pose the prediction poll to the class, then run a query filtering on the non-indexed email column with EXPLAIN ANALYZE.",
+          "code": "EXPLAIN ANALYZE\nSELECT * FROM users WHERE email = 'alice@example.com';",
+          "explanation": "We ask PostgreSQL to both plan and actually execute the query, reporting what it did. Point out the 'Seq Scan on users' line and the actual time. Emphasize it read through the whole table to find one row.",
+          "expected_output": "Seq Scan on users  (cost=0.00..20834.00 rows=1 width=...) \n  Filter: (email = 'alice@example.com')\n  Rows Removed by Filter: 999999\nExecution Time: ~85 ms"
+        },
+        {
+          "order": 2,
+          "instruction": "Callback to primary keys: run the same shape of query but on the primary key id to show it's already fast.",
+          "code": "EXPLAIN ANALYZE\nSELECT * FROM users WHERE id = 42;",
+          "explanation": "Show this uses an Index Scan already, because the primary key is automatically indexed. This motivates the question: why is id fast but email slow?",
+          "expected_output": "Index Scan using users_pkey on users  (cost=0.42..8.44 rows=1 width=...)\nExecution Time: ~0.05 ms"
+        },
+        {
+          "order": 3,
+          "instruction": "Create an index on the email column.",
+          "code": "CREATE INDEX idx_users_email ON users (email);",
+          "explanation": "Explain that this builds a separate lookup structure over the email values. Note it takes a moment on a large table — that build cost is a hint at the write/storage tradeoff.",
+          "expected_output": "CREATE INDEX"
+        },
+        {
+          "order": 4,
+          "instruction": "Re-run the original email query with EXPLAIN ANALYZE and compare.",
+          "code": "EXPLAIN ANALYZE\nSELECT * FROM users WHERE email = 'alice@example.com';",
+          "explanation": "Now PostgreSQL reports an Index Scan using idx_users_email, and execution time drops dramatically. Have learners identify the change from Seq Scan to Index Scan and note the cost difference.",
+          "expected_output": "Index Scan using idx_users_email on users  (cost=0.42..8.44 rows=1 width=...)\n  Index Cond: (email = 'alice@example.com')\nExecution Time: ~0.06 ms"
+        }
+      ],
+      "worked_examples": [
+        {
+          "setup": "A users table with ~1M rows, queried by email (non-indexed) versus by id (primary key, auto-indexed).",
+          "walkthrough": "We run EXPLAIN ANALYZE on the email query and observe a Seq Scan reading ~1M rows to return 1 — about 85ms. We contrast with the id query, which already uses an Index Scan at ~0.05ms because the primary key is indexed. We then CREATE INDEX on email and re-run, watching the plan flip from Seq Scan to Index Scan and the time collapse.",
+          "takeaway": "The index didn't change the data or the query — it changed how PostgreSQL finds the rows. Same result, far less work, because a lookup structure replaced an exhaustive read."
+        }
+      ],
+      "checks": [
+        {
+          "question": "Looking at this EXPLAIN output, is the database using a sequential scan or an index scan — and how can you tell?",
+          "expected_answer": "Learners point to the plan node: 'Seq Scan on users' means sequential scan (reading all rows); 'Index Scan using <index_name>' means it's using an index.",
+          "instructor_guidance": "Show a fresh EXPLAIN output and let learners call it out. Reinforce that the scan-type line is the first thing to read in any plan. If they hesitate, highlight the words 'Seq Scan' vs 'Index Scan' directly."
+        },
+        {
+          "question": "We have an index on email. If we query WHERE active = true and 90% of users are active, would you expect the index to help much? Why or why not?",
+          "expected_answer": "Not much — the filter isn't selective, it matches most of the table, so the database may skip the index and scan anyway.",
+          "instructor_guidance": "This checks the selectivity concept. Accept intuitive phrasing. Use it to preview that the planner makes cost-based decisions — details come in the next segment on when the planner skips an index."
+        }
+      ],
+      "activities": [
+        {
+          "type": "CHECKPOINT",
+          "prompt": "Prediction poll before we run any code: 'When we filter on the email column, which has no index, will PostgreSQL scan the whole table? Yes or No.'",
+          "expected_response": "Most will guess Yes; some may be unsure. The correct answer is Yes — a Seq Scan.",
+          "facilitation_notes": "Take the poll live before running step 1 so the EXPLAIN output confirms or corrects their prediction. Predictions increase engagement and make the reveal land harder."
+        },
+        {
+          "type": "DISCUSSION",
+          "prompt": "For those wanting depth: what does an index cost us that a plain table doesn't? Think about what happens on every INSERT and where the index lives.",
+          "expected_response": "Extra disk storage for the index structure, and extra work on every write (INSERT/UPDATE/DELETE) to keep the index in sync.",
+          "facilitation_notes": "Aim this at the advanced ~30%. Keep it to 2-3 minutes. Use it to plant the 'no free lunch' theme without over-explaining — this frames why we don't just index every column."
+        }
+      ],
+      "reviewer_rationale": "Depth is calibrated for a 70% beginner audience: the book-index analogy scaffolds vocabulary before any SQL, and EXPLAIN ANALYZE provides concrete, undeniable evidence of the seq-scan-vs-index-scan difference rather than abstract claims. The example reuses the already-covered primary key concept as a callback (id is auto-indexed) to motivate the driving question rather than re-teaching it. Content-to-code ratio (~13:7) fits a motivation-first framing segment — enough code to make the payoff tangible without turning it into a syntax lesson. Selectivity and the write/storage tradeoff are introduced lightly with a discussion aimed at the advanced 30%, and the planner-skips-index detail is deliberately deferred to Segment 2 to avoid overload. The transition-out sets up opening the B-tree black box.",
+      "status": "GENERATED",
+      "version": 1
+    },
+    {
+      "id": "seg-2-btree-mechanics-draft",
+      "outline_id": "seg-2-btree-mechanics",
+      "duration_minutes": 25,
+      "content_minutes": 14,
+      "code_minutes": 11,
+      "instructor_narration": "Now that we know indexes speed up lookups, let's see the structure that makes it possible — the B-tree — and trace exactly how PostgreSQL walks it.\n\nIn the last segment we treated the index as a black box: a lookup structure that lets us avoid scanning every row. Let's open that box. When you create a plain index in PostgreSQL, by default you get a B-tree. The 'B' stands for 'balanced', and that balance is the whole trick.\n\nLet me draw the shape of it. Picture a small pyramid. At the very top is a single node called the root. The root doesn't hold all your data — it holds a handful of key values and pointers that say, roughly, 'values less than 50 go left, values 50 and up go right.' One level down we have internal nodes, which do the same kind of routing but at finer granularity. At the very bottom we have leaf nodes, and the leaves are where the actual indexed key values live, in sorted order, each pointing to the row's location on disk.\n\nHere's the key mental model: every level you descend narrows your search dramatically. Let's trace a lookup. Say we're searching for the value 73. We start at the root. The root says values 50 and up go right, so we follow that pointer. At the internal node we compare again — maybe it says 70 to 90 go down this branch. We follow that. Now we land in a leaf node, which holds a small sorted run of keys, and we find 73, which points us straight to the row. Three hops, and we're done.\n\nWhy does that matter? Because the tree is balanced and each node holds many keys, the height of the tree grows only logarithmically with the number of rows. Doubling your table doesn't double your lookup work — it adds at most one more hop. A table with millions of rows is typically only three or four levels deep. That's the difference between reading a few pages versus scanning the entire table, which is exactly the sequential-scan cost we talked about in Segment 1.\n\nNow, here's the second big idea, and it's why B-trees are so useful beyond simple equality. The leaves are stored in sorted order and linked together. That means once you've found your starting point, you can just walk sideways through the leaves. This is huge for two query patterns: range queries — like 'give me everything between two dates' — and ORDER BY. If the data is already sorted in the index in the order you asked for, PostgreSQL can hand you rows in order without doing a separate sort step. Keep that in mind as we look at EXPLAIN in a moment.\n\nLet's make this concrete with our users table from before. We'll compare an equality lookup, a range query, and an ordered query, and we'll read the plans together.\n\n[After the equality and range demos] Notice how the range query used an 'Index Scan' or 'Index Range Scan' — it found the low end of the range in the tree, then walked the leaves rightward until it passed the high end. That sideways walk is the sorted structure paying off.\n\n[After the ORDER BY demo] And here's the ORDER BY plan — see that there's no separate 'Sort' node? The index already stores things in order, so PostgreSQL just reads them off. That's a free sort, courtesy of the B-tree.\n\nNow for a bit more depth — this next part is especially for those of you who've worked with indexes before, but everyone should follow the shape of the idea. Real queries often filter on multiple columns, so we create composite indexes, like an index on (last_name, first_name). The critical thing to understand is that a composite B-tree is sorted by the first column, then by the second within each value of the first — exactly like a phone book sorted by last name, then first name. This gives us the 'leftmost prefix' rule: the index can help a query that filters on last_name, or on last_name AND first_name, but it generally can't help a query that filters only on first_name. Why? Because first names are scattered all over the book once you ignore last name — there's no single place to start walking. Column order in a composite index is a design decision, not a formality.\n\nOne last thing that surprises people: sometimes you have a perfectly good index and PostgreSQL refuses to use it, choosing a Seq Scan instead. That's not a bug. Remember selectivity from Segment 1 — if your predicate matches a large fraction of the table, say 40% of rows, then hopping into the index and back out to fetch each row is actually more expensive than just reading the whole table sequentially. The planner does this cost math for you. So an index isn't a guarantee of an index scan; it's an option the planner weighs. Let's watch that happen live.\n\n[Closing] You can now explain not just that indexes help, but how a B-tree finds rows and when it won't be used. Let's recap and look at where to go next.",
+      "live_code_steps": [
+        {
+          "order": 1,
+          "instruction": "Create a B-tree index on the created_at column of our users table so we have something to observe.",
+          "code": "CREATE INDEX idx_users_created_at ON users (created_at);",
+          "explanation": "This is a default B-tree index. We'll use it to see equality, range, and ordering behavior. Point out this is the same table from Segment 1.",
+          "expected_output": "CREATE INDEX"
+        },
+        {
+          "order": 2,
+          "instruction": "Run an equality lookup with EXPLAIN and read the plan together.",
+          "code": "EXPLAIN ANALYZE\nSELECT * FROM users\nWHERE created_at = '2023-06-15 10:00:00';",
+          "explanation": "Walk the class through the tree traversal narrative: root to internal to leaf. Point at the 'Index Scan using idx_users_created_at' line in the plan and connect it to the three-hop story.",
+          "expected_output": "Index Scan using idx_users_created_at on users ... (actual time=... rows=1 ...)"
+        },
+        {
+          "order": 3,
+          "instruction": "Run a range query and highlight the sideways walk through the leaves.",
+          "code": "EXPLAIN ANALYZE\nSELECT * FROM users\nWHERE created_at BETWEEN '2023-06-01' AND '2023-06-30';",
+          "explanation": "Emphasize that the index found the start of the range, then walked the sorted leaves until the end. This is why sorted order matters, not just fast equality lookups.",
+          "expected_output": "Index Scan using idx_users_created_at on users ... Index Cond: ((created_at >= ...) AND (created_at <= ...))"
+        },
+        {
+          "order": 4,
+          "instruction": "Run an ORDER BY query and show that no Sort node appears.",
+          "code": "EXPLAIN ANALYZE\nSELECT * FROM users\nORDER BY created_at\nLIMIT 20;",
+          "explanation": "Ask learners to look for a 'Sort' node — there isn't one. The index already provides sorted order, so PostgreSQL reads the leaves in order. This is the 'free sort' payoff.",
+          "expected_output": "Limit ... -> Index Scan using idx_users_created_at on users (no Sort node)"
+        },
+        {
+          "order": 5,
+          "instruction": "Advanced: create a composite index and show the leftmost-prefix rule.",
+          "code": "CREATE INDEX idx_users_name ON users (last_name, first_name);\n\nEXPLAIN SELECT * FROM users WHERE last_name = 'Smith';\n\nEXPLAIN SELECT * FROM users WHERE first_name = 'Anna';",
+          "explanation": "The first query can use the index (leading column). The second, filtering only on first_name, typically shows a Seq Scan because first_name is not the leading column. Use the phone-book analogy here.",
+          "expected_output": "First: Index Scan using idx_users_name. Second: Seq Scan on users."
+        },
+        {
+          "order": 6,
+          "instruction": "Advanced: demonstrate the planner choosing a Seq Scan due to low selectivity.",
+          "code": "EXPLAIN ANALYZE\nSELECT * FROM users\nWHERE created_at > '2000-01-01';",
+          "explanation": "This predicate matches nearly every row, so the planner picks a Seq Scan even though an index exists. Connect back to selectivity from Segment 1: an index is an option the planner costs, not a guarantee.",
+          "expected_output": "Seq Scan on users ... Filter: (created_at > '2000-01-01')"
+        }
+      ],
+      "worked_examples": [
+        {
+          "setup": "A drawn B-tree on integer keys: root routes <50 / >=50; internal nodes subdivide further; leaves hold sorted keys with row pointers. Search target: 73.",
+          "walkthrough": "Start at root: 73 >= 50, follow right pointer. At internal node: 73 falls in the 70-90 branch, follow it. Land in leaf holding [70, 71, 73, 78]; scan the small sorted run and find 73, which points to the row on disk. Total: 3 node reads instead of scanning the whole table.",
+          "takeaway": "Each level narrows the search; the balanced tree stays shallow (logarithmic height), so lookups cost a handful of hops even on huge tables."
+        }
+      ],
+      "checks": [
+        {
+          "question": "Which of these queries can the index idx_users_created_at help with, and why: (a) created_at = X, (b) created_at BETWEEN X AND Y, (c) ORDER BY created_at?",
+          "expected_answer": "All three. Equality is a direct tree traversal to a leaf; the range uses the traversal plus a sideways walk through the sorted leaves; ORDER BY benefits because the leaves are already stored in sorted order, so no separate sort is needed.",
+          "instructor_guidance": "If learners only say equality, redirect them to the sorted-leaves idea. Reinforce that sorted structure — not just fast lookup — is what unlocks range and ordering benefits."
+        },
+        {
+          "question": "We have a composite index on (last_name, first_name). Will a query filtering only on first_name use it? Why or why not?",
+          "expected_answer": "Generally no. The index is sorted by last_name first, so first names are scattered throughout with no single starting point to walk from — like trying to find everyone named 'Anna' in a phone book sorted by last name.",
+          "instructor_guidance": "This is the advanced-depth check. Use the phone-book analogy if they're stuck. Note PostgreSQL may occasionally do an inefficient full index scan, but the leftmost-prefix intuition is the takeaway."
+        }
+      ],
+      "activities": [
+        {
+          "type": "CHECKPOINT",
+          "prompt": "Looking at the drawn B-tree, predict which leaf node the value 42 would land in, and count how many node reads it takes to get there.",
+          "expected_response": "Learners trace root -> left branch (42 < 50) -> internal node covering 40-49 -> leaf containing 42; roughly 3 node reads.",
+          "facilitation_notes": "Have one or two learners narrate their path out loud. This scaffolds the vocabulary (root, internal, leaf) for the 70% beginners before moving to EXPLAIN. Keep the tree small so counting is easy."
+        },
+        {
+          "type": "DISCUSSION",
+          "prompt": "We ran a query with a valid index but PostgreSQL chose a Seq Scan. Why might a query still trigger a Seq Scan even when a usable index exists?",
+          "expected_response": "Because the predicate has low selectivity — it matches a large fraction of the table. Random index lookups plus row fetches become more expensive than one sequential read, so the planner's cost model picks the Seq Scan.",
+          "facilitation_notes": "Aimed at the advanced 30% but accessible to all via the selectivity callback to Segment 1. Reinforce that an index is a costed option, not a command. Keep it to 2-3 minutes so beginners don't get lost."
+        }
+      ],
+      "reviewer_rationale": "Depth is layered so the 70% beginner majority is served first: the B-tree is built incrementally with a drawn diagram, a narrated three-hop lookup, and a trace-through checkpoint that cements vocabulary before any code. Code minutes (11) get the larger share via progressive EXPLAIN demos — equality, range, ORDER BY — each mapping directly to a structural idea (traversal, sorted-leaf walk, free sort). Advanced content (composite column order via leftmost prefix, and planner Seq-Scan choice under low selectivity) is deliberately placed last as optional depth, each anchored by an intuitive analogy (phone book) and a callback to Segment 1's selectivity so it doesn't derail beginners. The users table is reused per the example plan to avoid setup overhead, and no re-teaching of basic SQL or primary keys occurs — they appear only as callbacks. Two comprehension checks plus two activities satisfy the check requirement and match the activity plan (trace-through, query-classification, planner discussion).",
+      "status": "GENERATED",
+      "version": 1
+    }
+  ],
+  "latest_evaluation": {
+    "id": "eval_fcfdce46cf01",
+    "project_id": "project_83f71a5c0379",
+    "structural": {
+      "all_agenda_items_present": true,
+      "timing_sums_correctly": true,
+      "content_code_ratio_within_tolerance": true,
+      "prior_topics_not_reteaught": true,
+      "segment_ids_stable": true,
+      "failures": []
+    },
+    "model_judge": {
+      "coverage_score": 5.0,
+      "level_fit_score": 5.0,
+      "pedagogy_score": 5.0,
+      "tone_score": 4.0,
+      "factuality_score": 4.0,
+      "pacing_score": 4.0,
+      "judge_rationale": "Coverage is complete: both agenda items ('why indexes exist' and 'B-tree mechanics') are fully developed, with the second layering range/ORDER BY/composite/planner-skip content that maps cleanly to the outline. Prior topics (basic SQL, primary keys) are used as callbacks rather than re-taught, exactly as briefed. Level fit is strong: beginner-first analogies (book index, phone book), vocabulary scaffolding, and prediction polls serve the 70%, while composite column-order and planner cost decisions are explicitly tagged as optional depth for the 30% without derailing the core narrative. Pedagogy is excellent: motivation-before-mechanics ordering, incremental B-tree construction with a narrated trace, EXPLAIN as concrete evidence, and comprehension checks tied to concepts. Tone is largely strong and instructor-like, though it occasionally leans on stock phrasing ('that's the whole game', 'no free lunch', 'here's the key mental model') that reads slightly formulaic; still well above generic LLM filler. Factuality is mostly sound, but a few claims risk overstatement: the composite-index example asserts a plain Seq Scan for a first_name-only filter, when PostgreSQL frequently chooses a full Index (Only) Scan on the composite index instead of a Seq Scan — the narration hedges 'generally can't help' but the expected_output hard-codes 'Seq Scan on users', which could mislead. The 'free sort' framing is fine but glosses that index-order reads still incur random heap fetches unless index-only. Pacing is reasonable: 20+25 sums to 45 and content/code ratios match the 60/40 target, but Segment 2 packs six live-code steps plus two analogies, a diagram trace, and two advanced discussions into 25 minutes, which is ambitious and risks running long given beginner comprehension checks; the advanced tail could compress. Overall a high-quality, well-calibrated script with minor factual hedging and pacing-density concerns in the second segment."
+    },
+    "golden_comparison": {
+      "comparison_method": "Blind pairwise preference against human-authored instructor scripts.",
+      "required_dataset": "A small set of real Scaler class scripts matched by topic and level.",
+      "blind_review_protocol": "Instructors compare anonymized generated and human scripts, then choose which is more teach-ready and whether either needs major edits.",
+      "notes": "Documented as production eval path; not run in this take-home without golden scripts."
+    },
+    "passed_gate": true,
+    "recommendations": [],
+    "created_at": "2026-07-07T08:04:16.245499Z"
+  },
+  "review_events": [],
+  "sign_off": null,
+  "review_status": "UNDER_REVIEW",
+  "generation_status": "READY_FOR_REVIEW",
+  "generation_message": "Generation complete. Ready for instructor review.",
+  "generation_progress": 100,
+  "generation_error": null,
+  "created_at": "2026-07-07T08:01:29.115065Z",
+  "updated_at": "2026-07-07T08:04:16.245558Z"
+}

@@ -404,6 +404,10 @@ textarea {
   border-left-color: #12753a;
 }
 
+.example-block {
+  border-left-color: #9a6700;
+}
+
 .block-label {
   display: inline-flex;
   width: fit-content;
@@ -415,6 +419,12 @@ textarea {
   margin-bottom: 8px;
   padding: 3px 7px;
   text-transform: uppercase;
+}
+
+.mini-section {
+  display: grid;
+  gap: 5px;
+  margin-top: 12px;
 }
 
 pre {

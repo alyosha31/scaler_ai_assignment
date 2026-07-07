@@ -211,6 +211,7 @@ function App() {
                 void refreshProjects()
               }}
             />
+            <RecapNextPanel project={project} />
             <ReviewHistory project={project} />
           </aside>
         </div>
@@ -559,8 +560,10 @@ function SegmentPanel({
       </div>
 
       <div className="outline-strip">
+        <p><strong>Transition in:</strong> {outline.transition_in}</p>
         <p><strong>Strategy:</strong> {outline.teaching_strategy}</p>
         <p><strong>Rationale:</strong> {outline.rationale}</p>
+        <p><strong>Transition out:</strong> {outline.transition_out}</p>
       </div>
 
       <section className="script-block">
@@ -680,12 +683,24 @@ function InlineScript({ segment }: { segment: SegmentDraft }) {
     <div className="inline-script">
       {blocks}
       {codeSteps.map((step) => <LiveCodeBlock step={step} key={`remaining-code-${step.order}`} />)}
+      {segment.worked_examples.map((example) => <WorkedExampleBlock example={example} key={example.setup} />)}
       {checks.map((check) => <CheckpointBlock check={check} key={`remaining-check-${check.question}`} />)}
       {activities.map((activity) => <ActivityBlock activity={activity} key={`remaining-activity-${activity.prompt}`} />)}
       {renderedMarkers.code + renderedMarkers.checks + renderedMarkers.activities === 0 &&
         segment.live_code_steps.length + segment.checks.length + segment.activities.length > 0 && (
           <p className="muted">Structured items are shown after the narration because this segment has no inline markers yet.</p>
         )}
+    </div>
+  )
+}
+
+function WorkedExampleBlock({ example }: { example: SegmentDraft['worked_examples'][number] }) {
+  return (
+    <div className="subcard inline-block example-block">
+      <span className="block-label">Worked example</span>
+      <strong>{example.setup}</strong>
+      <p>{example.walkthrough}</p>
+      <p className="muted">Takeaway: {example.takeaway}</p>
     </div>
   )
 }
@@ -803,6 +818,23 @@ function SignOffPanel({
           </button>
         </>
       )}
+    </div>
+  )
+}
+
+function RecapNextPanel({ project }: { project: ScriptProject }) {
+  if (!project.outline) return null
+  return (
+    <div className="panel">
+      <h2>Recap and next</h2>
+      <div className="mini-section">
+        <strong>Recap</strong>
+        <p className="muted">{project.outline.recap_plan}</p>
+      </div>
+      <div className="mini-section">
+        <strong>Next</strong>
+        <p className="muted">{project.outline.next_steps_plan}</p>
+      </div>
     </div>
   )
 }

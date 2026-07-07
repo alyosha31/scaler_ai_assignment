@@ -1,0 +1,587 @@
+{
+  "id": "project_75ab84bd5df5",
+  "brief": {
+    "topic": "State Management in React",
+    "agenda": [
+      "Local component state",
+      "Derived state",
+      "Prop drilling",
+      "Context API",
+      "Reducer pattern"
+    ],
+    "beginner_percentage": 65,
+    "advanced_percentage": 35,
+    "duration_minutes": 45,
+    "content_percentage": 40,
+    "code_percentage": 60,
+    "topics_already_covered": [
+      "React components",
+      "props",
+      "event handlers"
+    ]
+  },
+  "validation": {
+    "is_valid": true,
+    "warnings": [],
+    "errors": [],
+    "normalized_brief": {
+      "topic": "State Management in React",
+      "agenda": [
+        "Local component state",
+        "Derived state",
+        "Prop drilling",
+        "Context API",
+        "Reducer pattern"
+      ],
+      "beginner_percentage": 65,
+      "advanced_percentage": 35,
+      "duration_minutes": 45,
+      "content_percentage": 40,
+      "code_percentage": 60,
+      "topics_already_covered": [
+        "React components",
+        "props",
+        "event handlers"
+      ]
+    }
+  },
+  "outline": {
+    "id": "outline-state-management-react",
+    "topic": "State Management in React",
+    "total_duration_minutes": 45,
+    "audience_calibration": "Mixed cohort skewing beginner (65% beginner / 35% advanced). Default to scaffolding vocabulary (state, re-render, single source of truth) and using frequent comprehension checks, while inserting optional depth callouts and tradeoff discussions to keep the 35% advanced learners engaged. Move at a moderate pace early (local/derived state) and accelerate through Context and reducers, where advanced learners can absorb tradeoffs quickly.",
+    "target_content_minutes": 18,
+    "target_code_minutes": 27,
+    "segments": [
+      {
+        "id": "seg-1-local-state",
+        "order": 1,
+        "agenda_item": "Local component state",
+        "title": "Owning State Inside a Component with useState",
+        "duration_minutes": 9,
+        "content_minutes": 4,
+        "code_minutes": 5,
+        "learning_objective": "Learners can declare, read, and update local component state using useState and explain when a value belongs in state versus a prop.",
+        "concepts_introduced": [
+          "useState hook",
+          "state variable vs setter",
+          "re-render on state change",
+          "single source of truth (local)"
+        ],
+        "concepts_assumed": [
+          "React components",
+          "props",
+          "event handlers"
+        ],
+        "concepts_reinforced": [
+          "event handlers"
+        ],
+        "teaching_strategy": "Vocabulary-first mini-explanation, then live-code a counter/toggle. Anchor 'state = data that changes over time and triggers re-render' before touching syntax. Use a quick check: 'prop or state?' for 3 sample values.",
+        "example_plan": "Live-code a like button: a component holding a numeric count in useState, incremented via an onClick handler (reusing prior event-handler knowledge). Add a boolean toggle to show two independent state slices.",
+        "activity_plan": [
+          "Cold-call: is this a prop or state? (username passed in, isOpen toggled by click, item count)",
+          "Predict-the-output: what renders after two setCount calls?"
+        ],
+        "transition_in": "Open by recalling that components receive data via props (already covered) and posing: what happens when data must change after render?",
+        "transition_out": "We can store and change values now—but some values shouldn't be stored at all because they can be computed. That leads us to derived state.",
+        "rationale": "Foundational segment for beginners; needs the most vocabulary scaffolding and gets slightly more time. Code-heavy to match the 60% code target."
+      },
+      {
+        "id": "seg-2-derived-state",
+        "order": 2,
+        "agenda_item": "Derived state",
+        "title": "Computing Instead of Storing: Derived State",
+        "duration_minutes": 7,
+        "content_minutes": 3,
+        "code_minutes": 4,
+        "learning_objective": "Learners can identify values that should be computed during render rather than stored in state, and refactor redundant state into derived values.",
+        "concepts_introduced": [
+          "derived/computed values",
+          "redundant state anti-pattern",
+          "compute-in-render"
+        ],
+        "concepts_assumed": [
+          "props"
+        ],
+        "concepts_reinforced": [
+          "useState hook",
+          "re-render on state change"
+        ],
+        "teaching_strategy": "Show a deliberate anti-pattern (storing a total in state and manually syncing it), let learners spot the bug via a check question, then refactor live to compute it inline. Advanced callout: when memoization becomes relevant.",
+        "example_plan": "Cart example: items list in state; refactor a separately-stored 'total' and 'itemCount' into values computed from the list each render, demonstrating they stay in sync automatically.",
+        "activity_plan": [
+          "Spot-the-bug: why does the displayed total go stale?",
+          "Advanced tradeoff prompt: when might you memoize a derived value?"
+        ],
+        "transition_in": "We just stored two independent state values—but what if one value can always be calculated from another?",
+        "transition_out": "Derived state keeps a component clean, but real apps need to share state across components—first, let's see the pain of passing it down manually.",
+        "rationale": "Short, tightly-scoped concept that corrects a common beginner mistake; builds directly on segment 1's useState."
+      },
+      {
+        "id": "seg-3-prop-drilling",
+        "order": 3,
+        "agenda_item": "Prop drilling",
+        "title": "Passing State Down: Prop Drilling and Its Limits",
+        "duration_minutes": 8,
+        "content_minutes": 3,
+        "code_minutes": 5,
+        "learning_objective": "Learners can lift state up and pass it through intermediate components via props, and articulate why deep prop drilling becomes hard to maintain.",
+        "concepts_introduced": [
+          "lifting state up",
+          "prop drilling",
+          "intermediate/pass-through components"
+        ],
+        "concepts_assumed": [
+          "props",
+          "React components"
+        ],
+        "concepts_reinforced": [
+          "useState hook",
+          "single source of truth (local)"
+        ],
+        "teaching_strategy": "Build a 3-level component tree live so learners feel the friction of threading props through a component that doesn't use them. Frame the problem explicitly to motivate Context next.",
+        "example_plan": "A theme/user example: App holds user state, passes it through a Layout component (which ignores it) down to a Header that displays it—highlighting the middle component as a pass-through.",
+        "activity_plan": [
+          "Guided pair-think: name a value in your own app that gets drilled",
+          "Check: which component actually needs this prop vs merely relays it?"
+        ],
+        "transition_in": "Now that state can be computed and stored, how do two distant components share it? First, the manual way.",
+        "transition_out": "Threading props through components that don't care about them is tedious—Context API removes that middleman.",
+        "rationale": "Sets up the motivation for Context; code-forward so beginners experience the problem before the solution."
+      },
+      {
+        "id": "seg-4-context",
+        "order": 4,
+        "agenda_item": "Context API",
+        "title": "Sharing State Without Drilling: Context API",
+        "duration_minutes": 11,
+        "content_minutes": 4,
+        "code_minutes": 7,
+        "learning_objective": "Learners can create a context, provide a value, and consume it with useContext, and explain when Context is the right tool.",
+        "concepts_introduced": [
+          "createContext",
+          "Context Provider",
+          "useContext hook",
+          "consumer components"
+        ],
+        "concepts_assumed": [
+          "React components",
+          "props"
+        ],
+        "concepts_reinforced": [
+          "lifting state up",
+          "prop drilling",
+          "useState hook"
+        ],
+        "teaching_strategy": "Refactor the exact prop-drilling example from segment 3 into Context so learners see a direct before/after. Slow down on createContext/Provider/useContext vocabulary for beginners; add an advanced tradeoff note on re-render scope and overuse.",
+        "example_plan": "Refactor the user example: wrap the tree in a UserContext.Provider holding the useState value, delete the pass-through props, and consume via useContext in Header.",
+        "activity_plan": [
+          "Comprehension check: which three pieces make Context work?",
+          "Advanced discussion: why isn't Context a full replacement for a state library?"
+        ],
+        "transition_in": "Remember the pass-through component that just relayed props? Let's delete those props entirely.",
+        "transition_out": "Context solves sharing, but when the shared state has complex update logic, scattered setters get messy—enter the reducer pattern.",
+        "rationale": "Longest segment: core payoff of the class, benefits most from the drilling contrast, and is code-heavy to hit the ratio."
+      },
+      {
+        "id": "seg-5-reducer",
+        "order": 5,
+        "agenda_item": "Reducer pattern",
+        "title": "Structuring Complex Updates: useReducer",
+        "duration_minutes": 10,
+        "content_minutes": 4,
+        "code_minutes": 6,
+        "learning_objective": "Learners can model state transitions with a reducer function and dispatch actions using useReducer, and explain when useReducer is preferable to multiple useState calls.",
+        "concepts_introduced": [
+          "reducer function",
+          "action objects",
+          "dispatch",
+          "useReducer hook",
+          "state transitions"
+        ],
+        "concepts_assumed": [
+          "event handlers"
+        ],
+        "concepts_reinforced": [
+          "useState hook",
+          "Context Provider",
+          "useContext hook",
+          "derived/computed values"
+        ],
+        "teaching_strategy": "Introduce the (state, action) => newState mental model with a plain-JS reducer before the hook, so beginners grasp the pure-function idea. Then wire useReducer. Advanced callout: pairing useReducer with Context for scalable global state; tradeoffs vs useState.",
+        "example_plan": "Refactor the cart from segment 2 into useReducer with ADD_ITEM / REMOVE_ITEM / CLEAR actions, then optionally expose dispatch through the Context from segment 4 to tie the class together.",
+        "activity_plan": [
+          "Trace-the-reducer: given a state and an action, what is the new state?",
+          "Advanced prompt: multiple useState vs one useReducer—when do you switch?"
+        ],
+        "transition_in": "Our Context now holds state, but updating it means many scattered setters. Let's centralize the update logic.",
+        "transition_out": "You now have a toolkit from local state up to shared, structured state—let's recap how they connect.",
+        "rationale": "Advanced-leaning capstone that unifies earlier segments; placed last so the 35% advanced learners get depth after fundamentals are solid."
+      }
+    ],
+    "recap_plan": "Walk the escalation ladder in one slide: local useState → derive don't store → lift state up → avoid drilling with Context → structure updates with useReducer. Use a decision heuristic ('does this value change? is it computable? who needs it? how complex are its updates?') and cold-call 2–3 quick answers to confirm the mental model.",
+    "next_steps_plan": "Assign a short exercise: refactor a prop-drilled mini-app to Context + useReducer. Point beginners to the React docs on useState/useContext and advanced learners to Context re-render performance and when to reach for external state libraries (Zustand/Redux) and useMemo/useCallback.",
+    "global_assumptions": [
+      "Learners can write function components and JSX.",
+      "Learners understand props as read-only inputs and can attach event handlers like onClick.",
+      "Development environment (Vite/CRA) and browser tooling are already set up; no setup time budgeted.",
+      "Examples build cumulatively (like button → cart → user tree) to reduce context-switching."
+    ],
+    "design_rationale": [
+      "Content/code split targets ~18 content / ~27 code minutes; each segment's code minutes exceed content to honor the 60% code request.",
+      "Segment durations sum exactly to 45 (9+7+8+11+10).",
+      "Ordering follows a difficulty ramp that mirrors real refactoring: store, then derive, then share, then structure.",
+      "Beginner majority drives vocabulary scaffolding and frequent checks in early segments; advanced 35% served via tradeoff callouts in Context and reducer segments.",
+      "Prior topics (components, props, event handlers) are reused as scaffolding and never re-taught.",
+      "Cumulative examples let later segments refactor earlier code, reinforcing prior concepts without new setup cost."
+    ],
+    "warnings": []
+  },
+  "segments": [
+    {
+      "id": "seg-1-local-state",
+      "outline_id": "seg-1-local-state",
+      "duration_minutes": 9,
+      "content_minutes": 4,
+      "code_minutes": 5,
+      "instructor_narration": "Alright, let's kick off state management. Quick recall before we start: so far, every component we've built receives its data from the outside through props. Props are read-only inputs — the parent hands them down, the child renders them. That works beautifully for data that stays fixed for the life of that render.\n\nBut here's the question I want you to sit with: what happens when data has to *change* after the component has already rendered? Think of a like button. The count starts at zero, but when I click, it needs to become one, then two. Props can't help us here — a component can't reassign its own props, and even if it could, React wouldn't know to re-render. So we need something new.\n\nThat something is *state*. Let me give you the one-sentence definition I want you to hold onto for the rest of this class: state is data that changes over time and, when it changes, causes the component to re-render with the new value. Two halves to that definition — it changes, and changing it repaints the UI. Both matter.\n\nSo the mental split becomes: props are data passed *in* from a parent that the component doesn't own; state is data the component *owns* and controls itself. That ownership idea is what we call the single source of truth — for a piece of local state, one component holds the real value, and everything it shows is based on that one value.\n\nBefore we touch any syntax, let's pressure-test that distinction with three quick examples, because the 'prop or state?' instinct is the whole game here. Then we'll live-code a like button so you can see state actually mutate and trigger a re-render in front of you.\n\n[After the live code] So now you've seen it: useState hands us a value and a setter, we never mutate the value directly, we call the setter, and React re-renders. And notice each piece of state is independent — count and the toggle didn't interfere with each other. Now, here's the catch that sets up our next segment: sometimes we're tempted to store a value in state when we could just *compute* it from state we already have. Storing something you can derive is actually a trap. That's exactly where we're headed next — derived state.",
+      "live_code_steps": [
+        {
+          "order": 1,
+          "instruction": "Create a LikeButton component and import useState from React.",
+          "code": "import { useState } from 'react';\n\nfunction LikeButton() {\n  return <button>Like</button>;\n}",
+          "explanation": "Start with the plain component they already know from prior lessons — just a button, no state yet. This anchors the 'before' picture.",
+          "expected_output": "A button rendering the text 'Like' with no interactivity."
+        },
+        {
+          "order": 2,
+          "instruction": "Declare a piece of state with useState, destructuring the value and its setter.",
+          "code": "function LikeButton() {\n  const [count, setCount] = useState(0);\n  return <button>Like ({count})</button>;\n}",
+          "explanation": "Narrate the two returned items explicitly: 'count' is the current value, 'setCount' is the only approved way to change it. The 0 passed in is the initial value. Emphasize the array destructuring is just naming those two things.",
+          "expected_output": "Button displays 'Like (0)'."
+        },
+        {
+          "order": 3,
+          "instruction": "Wire up an onClick handler that calls the setter — reusing event-handler knowledge from before.",
+          "code": "function LikeButton() {\n  const [count, setCount] = useState(0);\n  return (\n    <button onClick={() => setCount(count + 1)}>\n      Like ({count})\n    </button>\n  );\n}",
+          "explanation": "Callback to the event-handler lesson: 'you already know onClick.' The new part is what happens inside — we call setCount, not count = count + 1. Stress: never mutate the state variable directly; always go through the setter, because the setter is what tells React to re-render.",
+          "expected_output": "Clicking the button increments the number: 'Like (1)', 'Like (2)', and so on."
+        },
+        {
+          "order": 4,
+          "instruction": "Add a second, independent piece of state — a boolean toggle — to show state slices don't interfere.",
+          "code": "function LikeButton() {\n  const [count, setCount] = useState(0);\n  const [liked, setLiked] = useState(false);\n  return (\n    <div>\n      <button onClick={() => setCount(count + 1)}>Like ({count})</button>\n      <button onClick={() => setLiked(!liked)}>\n        {liked ? '❤️ Liked' : '🤍 Not liked'}\n      </button>\n    </div>\n  );\n}",
+          "explanation": "Demonstrate that a component can hold multiple independent state variables, each with its own useState call. Toggling 'liked' doesn't reset 'count'. This reinforces that each slice is its own source of truth.",
+          "expected_output": "Two buttons: one counting up, one flipping between 'Not liked' and 'Liked' independently."
+        }
+      ],
+      "worked_examples": [],
+      "checks": [
+        {
+          "question": "After the button renders as 'Like (0)', I write onClick={() => { setCount(count + 1); setCount(count + 1); }}. What does the display show after one click?",
+          "expected_answer": "It shows 'Like (1)', not 2, because both calls read the same stale 'count' value of 0 within that render, so both set it to 1.",
+          "instructor_guidance": "Most beginners will guess 2 — that's the valuable mistake. Use it to reinforce that 'count' is a snapshot from this render, not a live variable. Don't rabbit-hole into functional updates yet; just plant the seed that state values are captured per render. Keep it under a minute."
+        }
+      ],
+      "activities": [
+        {
+          "type": "CHECKPOINT",
+          "prompt": "Prop or state? For each: (1) a username displayed at the top of a profile card that the parent passes down, (2) an isOpen value that flips when a user clicks a menu, (3) an item count on a shopping cart badge that goes up as users add items.",
+          "expected_response": "(1) Prop — passed in from outside, the component doesn't change it. (2) State — the component owns it and it changes on interaction. (3) State — it changes over time within the component that tracks the cart.",
+          "facilitation_notes": "Cold-call three different learners, one per item. If someone hesitates on #1, re-anchor with the definition: 'Does this component change it, or just display what it was handed?' Keep the tempo brisk — this is a diagnostic, not a deep dive."
+        }
+      ],
+      "reviewer_rationale": "This is the foundational segment for a 65%-beginner room, so it leads vocabulary-first: the 'data that changes over time and triggers re-render' definition is stated before any syntax and reused in the wrap-up. The like-button example was chosen because it deliberately reuses onClick (already-covered event handlers) so cognitive load lands only on the new useState concept. A second boolean toggle demonstrates independent state slices cheaply. The comprehension check uses the classic double-setCount stale-closure surprise to expose the 'value is a per-render snapshot' idea for the 35% advanced learners without derailing into functional updaters. The 'prop or state?' checkpoint directly serves the learning objective's second half. Code time (~5 min across four incremental steps) matches the 60% code target; transitions callback to props and hand off cleanly to derived state.",
+      "status": "GENERATED",
+      "version": 1
+    },
+    {
+      "id": "seg-2-derived-state",
+      "outline_id": "seg-2-derived-state",
+      "duration_minutes": 7,
+      "content_minutes": 3,
+      "code_minutes": 4,
+      "instructor_narration": "We just stored two independent state values—but what if one value can always be calculated from another? That's the question I want you to keep asking as your components grow. Here's the trap most people fall into. Say we're building a shopping cart. We've got a list of items in state—that's real, that's data the user changes. But we also want to show a running total and an item count. The instinct is: 'Those are values I display, so they must be state too.' So we call useState three times: one for the items, one for the total, one for the count. Feels organized, right? Watch what happens when we actually run it. When I add an item, the items array updates and the component re-renders—remember from the last segment, calling a setter triggers a re-render. But the total? It's stale. It shows the old number. Why? Because I only updated the items state; I never told the total setter about the change. Now I have to remember to manually sync total and count every single time items changes. Every add, every remove, every quantity edit. That's three places I can forget, three places bugs hide. This is what we call the redundant state anti-pattern: storing a value in state that could always be computed from other state. The fix is a mindset shift. The total isn't independent data—it's a function of the items. So instead of storing it, we compute it during render. Every time the component re-renders, we recalculate the total right there in the render body from the current items. It's impossible for it to go stale, because it's derived fresh every time. Let me refactor this live so you see how much cleaner it gets. For the advanced folks—yes, if that computation were genuinely expensive, you'd reach for useMemo. But that's an optimization, not the default. The default is: compute in render, and only memoize when you've measured a real cost.",
+      "live_code_steps": [
+        {
+          "order": 1,
+          "instruction": "Show the anti-pattern: three separate pieces of state that must be kept in sync.",
+          "code": "function Cart() {\n  const [items, setItems] = useState([\n    { id: 1, name: 'Book', price: 12 },\n    { id: 2, name: 'Pen', price: 3 },\n  ]);\n  const [total, setTotal] = useState(15);\n  const [itemCount, setItemCount] = useState(2);\n\n  function addItem() {\n    setItems([...items, { id: Date.now(), name: 'Mug', price: 8 }]);\n    // BUG: total and itemCount are never updated here\n  }\n\n  return (\n    <div>\n      <p>Items: {itemCount}</p>\n      <p>Total: ${total}</p>\n      <button onClick={addItem}>Add Mug</button>\n    </div>\n  );\n}",
+          "explanation": "Point out that addItem only touches items. The total and itemCount setters are never called, so the display goes stale after clicking Add.",
+          "expected_output": "Clicking 'Add Mug' adds to the list internally, but the UI still shows 'Items: 2' and 'Total: $15'."
+        },
+        {
+          "order": 2,
+          "instruction": "Refactor: delete the redundant state and compute the values in the render body.",
+          "code": "function Cart() {\n  const [items, setItems] = useState([\n    { id: 1, name: 'Book', price: 12 },\n    { id: 2, name: 'Pen', price: 3 },\n  ]);\n\n  // Derived values — computed every render from items\n  const itemCount = items.length;\n  const total = items.reduce((sum, item) => sum + item.price, 0);\n\n  function addItem() {\n    setItems([...items, { id: Date.now(), name: 'Mug', price: 8 }]);\n  }\n\n  return (\n    <div>\n      <p>Items: {itemCount}</p>\n      <p>Total: ${total}</p>\n      <button onClick={addItem}>Add Mug</button>\n    </div>\n  );\n}",
+          "explanation": "Now itemCount and total are ordinary variables recalculated on every render. Because updating items triggers a re-render, the derived values recompute automatically and can never drift out of sync.",
+          "expected_output": "Clicking 'Add Mug' updates the list AND immediately shows 'Items: 3' and 'Total: $23'."
+        },
+        {
+          "order": 3,
+          "instruction": "Advanced callout: mention useMemo only where it matters.",
+          "code": "const total = useMemo(\n  () => items.reduce((sum, item) => sum + item.price, 0),\n  [items]\n);",
+          "explanation": "Note that this is optional and only worth it for genuinely expensive computations. For a small reduce like ours, plain compute-in-render is correct and simpler. Don't reach for useMemo by reflex.",
+          "expected_output": "Same UI result; identical behavior, just cached between renders when items is unchanged."
+        }
+      ],
+      "worked_examples": [
+        {
+          "setup": "A Cart component holding an items array, plus a displayed total and item count.",
+          "walkthrough": "We first store total and itemCount as their own useState values and watch them go stale after adding an item, because addItem only updates items. We then delete those two pieces of state and instead compute itemCount as items.length and total as a reduce over items, directly in the render body.",
+          "takeaway": "If a value can always be calculated from existing state or props, don't store it in state—compute it during render so it can never fall out of sync."
+        }
+      ],
+      "checks": [
+        {
+          "question": "In the first version, after clicking 'Add Mug', the items array grew but 'Total: $15' didn't change. Why does the displayed total go stale?",
+          "expected_answer": "Because addItem only calls setItems. The total is stored in its own separate state and its setter is never called, so it keeps its old value even though the component re-renders with the new items.",
+          "instructor_guidance": "Let a couple of learners answer before revealing. Steer them toward the phrase 'never updated the total setter.' Reinforce the callback: a re-render happens, but state only changes for the piece whose setter you actually called."
+        }
+      ],
+      "activities": [
+        {
+          "type": "CHECKPOINT",
+          "prompt": "Spot-the-bug: Looking at the first Cart version, identify which value is redundant state and explain how you'd fix it in one sentence.",
+          "expected_response": "Both total and itemCount are redundant—they can be derived from items. Fix: remove their useState and compute them in render from the items array.",
+          "facilitation_notes": "Give 30 seconds of think time. Accept 'total' or 'itemCount' or both. If someone suggests syncing them inside addItem, acknowledge it works but ask 'what happens when you also add a removeItem handler?'—use that to motivate compute-in-render."
+        },
+        {
+          "type": "DISCUSSION",
+          "prompt": "Advanced tradeoff: When would you wrap a derived value in useMemo instead of computing it plainly each render?",
+          "expected_response": "When the computation is genuinely expensive (large lists, heavy transforms) and profiling shows it's causing a performance issue—memoize so it only recomputes when its dependencies change.",
+          "facilitation_notes": "Aimed at the 35% advanced cohort; keep it to ~30 seconds. Emphasize 'measure first.' Warn against premature memoization since it adds complexity and its own dependency-array bugs."
+        }
+      ],
+      "reviewer_rationale": "The segment is deliberately narrow: it corrects one high-frequency beginner mistake and builds straight off segment 1's useState/re-render mental model via explicit callbacks rather than re-teaching. The cart example was chosen because total and count are intuitively 'display values,' making the anti-pattern feel natural—which is exactly why the bug lands. The spot-the-bug check precedes the refactor so learners diagnose before seeing the fix, maximizing retention. Code minutes (4) exceed content (3) per the 60/40 split, delivered through a three-step live refactor. The useMemo step is scoped as an advanced callout only, respecting the 65% beginner majority while giving the 35% advanced learners a concrete tradeoff prompt without derailing the core objective.",
+      "status": "GENERATED",
+      "version": 1
+    },
+    {
+      "id": "seg-3-prop-drilling",
+      "outline_id": "seg-3-prop-drilling",
+      "duration_minutes": 8,
+      "content_minutes": 3,
+      "code_minutes": 5,
+      "instructor_narration": "Now that state can be computed and stored, how do two distant components share it? Let's start with the manual way—the one React gives you out of the box.\n\nHere's the situation. We've already used `useState` to own state inside a single component. But real apps aren't one component—they're trees. Say a piece of data lives at the top of your tree, and a component way down at the bottom needs it. How do they connect?\n\nThe first move is called 'lifting state up.' The idea: put the state in the closest common parent of every component that needs it. That parent becomes the single source of truth—same principle we saw with local state, just moved to a higher place in the tree. Then you hand the data down through props.\n\nAnd this is where it gets interesting. To get data from the top to the bottom, you sometimes have to pass it through components in the middle that don't actually use it. They just receive a prop and immediately hand it off to their own children. We call those pass-through, or intermediate, components—and the pattern of threading a prop down through them is called prop drilling.\n\nLet me build a small three-level tree so you can feel the friction, because that friction is exactly what motivates the next tool. Watch what the middle component is forced to do.",
+      "live_code_steps": [
+        {
+          "order": 1,
+          "instruction": "Create the top-level App component that owns the user state.",
+          "code": "function App() {\n  const [user, setUser] = useState({ name: 'Ada' });\n  return <Layout user={user} />;\n}",
+          "explanation": "App is our common parent, so the user state lives here—this is 'lifting state up.' It's the same single-source-of-truth idea from our useState segment, just placed at the top of the tree. Notice App passes `user` down as a prop.",
+          "expected_output": "App renders Layout, forwarding the user object."
+        },
+        {
+          "order": 2,
+          "instruction": "Add the Layout component in the middle.",
+          "code": "function Layout({ user }) {\n  // Layout doesn't use `user` at all...\n  return (\n    <div className=\"layout\">\n      <Header user={user} />\n    </div>\n  );\n}",
+          "explanation": "Here's the pain point. Layout has nothing to do with the user—it only cares about page structure. But because Header is nested inside it, Layout is forced to accept `user` and immediately pass it along. That's a pass-through component.",
+          "expected_output": "Layout renders a wrapper div and forwards user to Header."
+        },
+        {
+          "order": 3,
+          "instruction": "Add the Header component that actually consumes the prop.",
+          "code": "function Header({ user }) {\n  return <h1>Welcome, {user.name}!</h1>;\n}",
+          "explanation": "Finally, Header is the only component that genuinely needs `user`. So the prop traveled App -> Layout -> Header, but only the first and last stops care about it. Layout was pure overhead.",
+          "expected_output": "Renders 'Welcome, Ada!' on the page."
+        },
+        {
+          "order": 4,
+          "instruction": "Imagine scaling this. Point out what happens with more layers.",
+          "code": "// App -> Layout -> Sidebar -> Nav -> Menu -> Header\n// every one of those must accept and forward `user`\n// rename the prop? refactor every level. Add a new prop? touch every level.",
+          "explanation": "This is the maintainability problem. With one middle layer it's mildly annoying. With five, every intermediate component becomes coupled to data it never uses, and any change ripples through all of them. That's the limit of prop drilling.",
+          "expected_output": "No new output—conceptual illustration of the scaling cost."
+        }
+      ],
+      "worked_examples": [
+        {
+          "setup": "App holds a `user` object in state and needs to display the user's name in a Header that sits two levels down, behind a Layout component.",
+          "walkthrough": "We placed state in App (lifting up), passed `user` into Layout via props, Layout ignored it and forwarded it to Header, and Header finally rendered it. We traced the prop's journey and flagged Layout as a component doing work it has no interest in.",
+          "takeaway": "Prop drilling works and requires zero new APIs, but every intermediate component you thread through is coupled to data it doesn't use—cost grows with tree depth."
+        }
+      ],
+      "checks": [
+        {
+          "question": "In our tree, which component is the single source of truth for `user`, and which component is just a pass-through?",
+          "expected_answer": "App is the single source of truth because it owns the state via useState; Layout is the pass-through because it receives and forwards `user` without using it.",
+          "instructor_guidance": "If learners say Header owns it, gently re-anchor: ownership is where useState lives. Reinforce the callback to single-source-of-truth from the local state segment."
+        }
+      ],
+      "activities": [
+        {
+          "type": "DISCUSSION",
+          "prompt": "Pair-think for 60 seconds: name one value in an app you've worked on (or can imagine) that would have to be drilled through several components. Which component actually needs it, and which ones would only relay it?",
+          "expected_response": "Examples like a logged-in user, theme setting, or auth token; learners identify one true consumer and several pass-through relays.",
+          "facilitation_notes": "Cold-call one or two pairs. Listen for them distinguishing 'needs' vs 'relays'—that distinction is the whole motivation for Context. Keep it tight; this is a 45-min class and this segment is only 8 minutes."
+        }
+      ],
+      "reviewer_rationale": "This segment is deliberately code-forward (5 of 8 minutes) per the 60% code target and the rationale of letting the 65% beginners physically experience the drilling problem before the Context solution. The three-level user/Layout/Header example makes the pass-through component concrete with minimal cognitive load, and step 4 scales the pain verbally rather than in code to stay on time. I reused 'single source of truth' and 'useState' as callbacks rather than re-teaching covered material (components, props, event handlers). The discussion activity primes personal relevance and sharpens the needs-vs-relays distinction, which is the exact hook the Context segment pays off.",
+      "status": "GENERATED",
+      "version": 1
+    },
+    {
+      "id": "seg-4-context-draft",
+      "outline_id": "seg-4-context",
+      "duration_minutes": 11,
+      "content_minutes": 4,
+      "code_minutes": 7,
+      "instructor_narration": "Remember the pass-through component that just relayed props? Let's delete those props entirely. In the last segment we lifted our user state up to the App component, and then we had to pass it down through Layout, which didn't even use it, just so Header could read it. That middle component is what we called a pass-through, and when your tree gets deeper, you end up threading the same prop through five or six components that don't care about it. That's the pain Context is designed to remove.\n\nHere's the mental model. Context lets a component way up the tree publish a value, and any component below it—no matter how deep—can grab that value directly, without anyone in the middle passing it along. Think of it like a radio broadcast: the Provider is the station transmitting on a frequency, and the consumers are radios tuned to that frequency. Nobody in between has to relay the signal.\n\nThere are exactly three pieces to make Context work, and I want beginners to lock onto this vocabulary because it's the whole feature. First, createContext—that's the function that creates the channel itself. Second, the Provider—a component that comes with your context, and it holds the actual value you want to share, given to it through a value prop. Third, the useContext hook—that's how a component reads the current value off the channel. createContext makes the channel, Provider fills it, useContext reads it. Say that back to yourself.\n\nNow let's refactor the exact example from a minute ago so you see the before-and-after directly. We'll keep our useState in App—the state lives in the same place, we're not moving where the truth is. We're only changing how it travels down. Watch how the props on Layout just disappear.\n\nFor our advanced folks, keep one thing in mind while we type: everything below a Provider re-renders when that value changes. Context has no built-in selective subscription—if the value object changes identity, every consumer re-renders. That's why Context is a great transport mechanism for things like the current user or a theme, but it is not, by itself, a full state-management library. It solves sharing, not update logic or render optimization. We'll come back to that.",
+      "live_code_steps": [
+        {
+          "order": 1,
+          "instruction": "Start from the prop-drilling code we already have and create the context in its own line at the top of the module.",
+          "code": "import { createContext, useContext, useState } from 'react';\n\nconst UserContext = createContext(null);",
+          "explanation": "createContext returns an object that carries both the Provider and the channel identity. We pass null as the default—that's only used if a consumer has no Provider above it. Naming it UserContext with a capital U signals it's a component-ish thing we'll render.",
+          "expected_output": "No visible change yet; the module now exports a context object we can use."
+        },
+        {
+          "order": 2,
+          "instruction": "In App, wrap the tree in UserContext.Provider and hand the state to it through the value prop. Delete the user prop we were passing to Layout.",
+          "code": "function App() {\n  const [user, setUser] = useState({ name: 'Ada' });\n\n  return (\n    <UserContext.Provider value={user}>\n      <Layout />\n    </UserContext.Provider>\n  );\n}",
+          "explanation": "The useState is untouched—App is still the single source of truth. Notice Layout now receives zero props. The Provider broadcasts `user` to everything rendered inside it. This is the 'lifting state up' idea from last segment, but the delivery is now broadcast instead of hand-to-hand.",
+          "expected_output": "App renders without passing user down; app still works but Header will error until we wire it up in the next step."
+        },
+        {
+          "order": 3,
+          "instruction": "Delete the pass-through prop entirely from Layout so learners see the middle component get simpler.",
+          "code": "function Layout() {\n  return (\n    <div className=\"layout\">\n      <Header />\n    </div>\n  );\n}",
+          "explanation": "This is the payoff. Layout no longer knows or cares about user. Compare this to the previous version where it accepted `user` only to forward it. The intermediate component is now truly ignorant of the shared state—that's the drilling gone.",
+          "expected_output": "Layout renders Header with no props threaded through."
+        },
+        {
+          "order": 4,
+          "instruction": "In Header, read the value directly with useContext.",
+          "code": "function Header() {\n  const user = useContext(UserContext);\n  return <h1>Welcome, {user.name}</h1>;\n}",
+          "explanation": "useContext takes the context object—not a string, the actual UserContext we created—and returns whatever the nearest Provider above set as its value. No props, no forwarding. Header reached up the tree and grabbed the current user itself.",
+          "expected_output": "The page renders 'Welcome, Ada' exactly as before—same output, cleaner data flow."
+        }
+      ],
+      "worked_examples": [
+        {
+          "setup": "Side-by-side comparison of the segment-3 prop-drilling version and the segment-4 Context version of the same three-component tree.",
+          "walkthrough": "In the old version App passed user to Layout, and Layout passed user to Header—two hops, one of them purely mechanical. In the new version App wraps everything in UserContext.Provider, Layout accepts nothing, and Header calls useContext to pull user directly. The state definition and where it lives are identical; only the transport changed.",
+          "takeaway": "Context doesn't move your state—it removes the middlemen. Reach for it when the same value must reach distant components through parts of the tree that don't use it."
+        }
+      ],
+      "checks": [
+        {
+          "question": "Name the three pieces that make Context work, and what each one does.",
+          "expected_answer": "createContext creates the channel/context object; the Provider component holds and broadcasts the value via its value prop; useContext reads the current value in a consumer component.",
+          "instructor_guidance": "Cold-call two or three learners and have them fill in one piece each. If someone says 'useState' as one of the three, gently separate the concepts: useState still owns the value; Context only transports it. Reinforce the create/provide/consume trio out loud."
+        }
+      ],
+      "activities": [
+        {
+          "type": "DISCUSSION",
+          "prompt": "Given that any component below a Provider re-renders when the value changes, why isn't Context a full replacement for a state-management library?",
+          "expected_response": "Context handles distribution but not selective subscription or optimized updates—every consumer re-renders on value change, and it doesn't structure complex update logic. Libraries add selectors, memoized subscriptions, and structured actions/reducers.",
+          "facilitation_notes": "Aimed at the ~35% advanced learners; timebox to 90 seconds. If beginners look lost, summarize simply: 'Context is a great pipe for one shared value; it's not a manager for lots of frequently-changing state.' Bridge directly into the reducer transition."
+        }
+      ],
+      "reviewer_rationale": "This is the longest, code-heaviest segment, so it hits the 60/40 code ratio with four concrete refactor steps rather than abstract explanation. I deliberately reused the exact user/Layout/Header tree from segment 3 so the before/after contrast is literal—learners watch the pass-through props get deleted, which is the emotional payoff of the class. Vocabulary (createContext/Provider/useContext) is slowed down and repeated for the 65% beginners via the radio-broadcast analogy and a checkpoint that forces recall of all three pieces. The advanced re-render/overuse tradeoff is layered in as a note plus a discussion so the 35% get depth without derailing beginners. Callbacks to lifting state up and useState honor the 'don't re-teach' rule, and the discussion sets up the reducer transition.",
+      "status": "GENERATED",
+      "version": 1
+    },
+    {
+      "id": "seg-5-reducer",
+      "outline_id": "seg-5-reducer",
+      "duration_minutes": 10,
+      "content_minutes": 4,
+      "code_minutes": 6,
+      "instructor_narration": "Our Context now holds the cart state, but look at what's happening: every time we want to update it, we're calling a different setter with slightly different logic scattered across our components. Add an item here, remove one there, clear it somewhere else. As the update rules get more complex, that sprawl becomes hard to reason about. Let's centralize all that update logic in one place.\n\nThe tool for this is a reducer. Before we touch any React, I want you to hold one mental model in your head: a reducer is just a plain function that takes the current state and an action, and returns the new state. That's it. `(state, action) => newState`. It's a pure function — same inputs, same output, no side effects. If you've ever used `Array.reduce`, this is the same idea: you fold a sequence of actions into an accumulated state.\n\nThe 'action' is just an object that describes what happened. By convention it has a `type` — like `'ADD_ITEM'` or `'REMOVE_ITEM'` — and often a payload with the data the action needs. Notice the shift in thinking: instead of components saying 'set the state to this specific value', they say 'here's what happened' and the reducer decides how state should change. That's what we mean by modeling state transitions — you enumerate the ways your state can change in one readable place.\n\nOnce we have that reducer function, React gives us the `useReducer` hook to wire it up. You call `useReducer(reducer, initialState)` and it hands you back the current `state` and a `dispatch` function. Instead of calling setters, you call `dispatch({ type: 'ADD_ITEM', product })`, and React runs your reducer to compute the next state and re-renders — same re-render behavior you already know from useState.\n\nSo when do you reach for useReducer over multiple useState calls? Rule of thumb: when several pieces of state change together, or when the next state depends on the previous state through non-trivial logic. A single value with simple updates? Keep useState. A cart with add, remove, quantity, and clear operations that interact? That's a reducer.\n\nAnd here's the payoff that ties our whole class together — for the advanced folks especially: you can put that `dispatch` function into the Context we built earlier. Now any component in the tree can dispatch actions to update shared state, without prop drilling and without a tangle of setters. That combination — useReducer for structured updates plus Context for distribution — is essentially a hand-rolled version of the state libraries you'll meet later.\n\nLet's refactor our cart to prove it out.",
+      "live_code_steps": [
+        {
+          "order": 1,
+          "instruction": "Write the reducer as a plain function first, outside any component.",
+          "code": "function cartReducer(state, action) {\n  switch (action.type) {\n    case 'ADD_ITEM':\n      return { ...state, items: [...state.items, action.product] };\n    case 'REMOVE_ITEM':\n      return {\n        ...state,\n        items: state.items.filter(i => i.id !== action.id),\n      };\n    case 'CLEAR':\n      return { ...state, items: [] };\n    default:\n      return state;\n  }\n}",
+          "explanation": "Point out the pure-function shape: it only reads state and action and returns a brand-new state object — no mutation. Each case is one named state transition. The default case returning state unchanged is important defensive practice.",
+          "expected_output": "No output yet — this is plain JS. Emphasize you could unit-test this function with zero React involved."
+        },
+        {
+          "order": 2,
+          "instruction": "Wire the reducer into the component with useReducer.",
+          "code": "import { useReducer } from 'react';\n\nconst initialCart = { items: [] };\n\nfunction Cart() {\n  const [state, dispatch] = useReducer(cartReducer, initialCart);\n  // state.items is our current cart\n}",
+          "explanation": "Draw the parallel to useState: same destructuring shape, but instead of a setter you get dispatch. state here is fully managed by the reducer.",
+          "expected_output": "Component renders with an empty cart (state.items === [])."
+        },
+        {
+          "order": 3,
+          "instruction": "Replace scattered setters with dispatch calls in event handlers.",
+          "code": "<button onClick={() => dispatch({ type: 'ADD_ITEM', product })}>\n  Add\n</button>\n<button onClick={() => dispatch({ type: 'REMOVE_ITEM', id: product.id })}>\n  Remove\n</button>\n<button onClick={() => dispatch({ type: 'CLEAR' })}>Clear cart</button>",
+          "explanation": "Callback to event handlers we already covered — the handler no longer knows HOW state changes, it just announces WHAT happened. All the how lives in the reducer. Also reinforce derived state: the item count is still computed in render, e.g. state.items.length, never stored.",
+          "expected_output": "Clicking Add appends an item, Remove filters it out, Clear empties the list, all triggering re-renders."
+        },
+        {
+          "order": 4,
+          "instruction": "Optional advanced tie-in: expose dispatch through the Context from the earlier segment.",
+          "code": "<CartContext.Provider value={{ state, dispatch }}>\n  {children}\n</CartContext.Provider>\n\n// In any deep child:\nconst { dispatch } = useContext(CartContext);\ndispatch({ type: 'ADD_ITEM', product });",
+          "explanation": "This is the capstone: reducer centralizes updates, Context distributes access. Any component can dispatch without prop drilling. Note dispatch identity is stable, so it won't cause extra re-renders when passed through context.",
+          "expected_output": "Deeply nested components can now update the shared cart directly."
+        }
+      ],
+      "worked_examples": [
+        {
+          "setup": "State is { items: [{ id: 1, name: 'Book' }] }. We dispatch { type: 'ADD_ITEM', product: { id: 2, name: 'Pen' } }.",
+          "walkthrough": "React calls cartReducer(currentState, action). The switch matches 'ADD_ITEM', so it returns a new object spreading the old state and appending the product to a new items array. The old array is never mutated.",
+          "takeaway": "The new state is { items: [{id:1,name:'Book'}, {id:2,name:'Pen'}] }, and React re-renders with it. The reducer decided the transition; the component only announced the action."
+        }
+      ],
+      "checks": [
+        {
+          "question": "Given state { items: [{id:1},{id:2}] } and action { type: 'REMOVE_ITEM', id: 1 }, what does the reducer return?",
+          "expected_answer": "A new state object { items: [{id:2}] } — the item with id 1 is filtered out, and the original array is not mutated.",
+          "instructor_guidance": "Watch for learners who say the reducer 'deletes from the array' — steer them toward the pure, return-a-new-object framing. Confirm they know state itself is untouched until React swaps it in."
+        }
+      ],
+      "activities": [
+        {
+          "type": "CHECKPOINT",
+          "prompt": "Trace-the-reducer: starting from { items: [] }, apply this sequence — ADD_ITEM (id:1), ADD_ITEM (id:2), REMOVE_ITEM (id:1), CLEAR. What is the final state after each step?",
+          "expected_response": "Step 1: {items:[{id:1}]}. Step 2: {items:[{id:1},{id:2}]}. Step 3: {items:[{id:2}]}. Step 4: {items:[]}.",
+          "facilitation_notes": "Do this out loud as a class, calling on beginners. Emphasize each arrow is one reducer call producing a fresh state — reinforcing the (state, action) => newState model before moving on."
+        },
+        {
+          "type": "DISCUSSION",
+          "prompt": "Advanced prompt: You have a form with five useState calls that always change together during validation. When would you switch to a single useReducer, and what do you gain?",
+          "expected_response": "Switch when the pieces of state are interdependent or updated together, or when next state depends on previous state. Gains: centralized transition logic, easier testing of the reducer in isolation, and cleaner dispatch-based handlers instead of coordinating multiple setters.",
+          "facilitation_notes": "Timebox to ~90 seconds. Let the 35% advanced learners lead; surface the tradeoff that useReducer adds indirection, so it's overkill for simple independent values."
+        }
+      ],
+      "reviewer_rationale": "Depth is calibrated for an advanced-leaning capstone: beginners get the pure-function mental model and a plain-JS reducer before any hook, satisfying the 65% who need fundamentals, while the Context-plus-dispatch step and the useState-vs-useReducer discussion give the 35% advanced learners the payoff. The cart example is reused deliberately from segment 2 so learners refactor familiar code rather than parsing a new domain, and it threads Context from segment 4 to unify the whole class. Code weight (~6 min) dominates per the 60% code target, with narration kept tight. Event handlers, useState, and Context are referenced as callbacks, not re-taught, per the covered-topics rule.",
+      "status": "GENERATED",
+      "version": 1
+    }
+  ],
+  "latest_evaluation": {
+    "id": "eval_3e2348527c18",
+    "project_id": "project_75ab84bd5df5",
+    "structural": {
+      "all_agenda_items_present": true,
+      "timing_sums_correctly": true,
+      "content_code_ratio_within_tolerance": true,
+      "prior_topics_not_reteaught": true,
+      "segment_ids_stable": true,
+      "failures": []
+    },
+    "model_judge": null,
+    "golden_comparison": {
+      "comparison_method": "Blind pairwise preference against human-authored instructor scripts.",
+      "required_dataset": "A small set of real Scaler class scripts matched by topic and level.",
+      "blind_review_protocol": "Instructors compare anonymized generated and human scripts, then choose which is more teach-ready and whether either needs major edits.",
+      "notes": "Documented as production eval path; not run in this take-home without golden scripts."
+    },
+    "passed_gate": true,
+    "recommendations": [],
+    "created_at": "2026-07-07T09:20:27.867555Z"
+  },
+  "review_events": [],
+  "sign_off": null,
+  "review_status": "UNDER_REVIEW",
+  "generation_status": "READY_FOR_REVIEW",
+  "generation_message": "Generation complete and eval gate passed.",
+  "generation_progress": 100,
+  "generation_error": null,
+  "created_at": "2026-07-07T09:16:16.683948Z",
+  "updated_at": "2026-07-07T09:20:27.867571Z"
+}

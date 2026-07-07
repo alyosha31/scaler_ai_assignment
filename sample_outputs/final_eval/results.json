@@ -1,0 +1,278 @@
+{
+  "model": "claude-opus-4-8",
+  "judge_enabled": true,
+  "prompt_hash": "d1ee2d199da4",
+  "scenario_count": 3,
+  "cases": [
+    {
+      "case_id": "postgres_beginner",
+      "category": "level_adaptivity",
+      "project_id": "project_83f71a5c0379",
+      "generation_status": "READY_FOR_REVIEW",
+      "structural_passed": true,
+      "guardrails": [
+        {
+          "name": "agenda_coverage",
+          "passed": true,
+          "detail": "All agenda items are represented.",
+          "red_line": null
+        },
+        {
+          "name": "timing_sum",
+          "passed": true,
+          "detail": "Outline totals 45 minutes; brief requested 45.",
+          "red_line": null
+        },
+        {
+          "name": "content_code_ratio",
+          "passed": true,
+          "detail": "Actual code ratio 40%; target 40%.",
+          "red_line": null
+        },
+        {
+          "name": "stable_segment_ids",
+          "passed": true,
+          "detail": "Every draft maps to a stable outline segment.",
+          "red_line": null
+        },
+        {
+          "name": "must_cover_terms",
+          "passed": true,
+          "detail": "Expected terms appear in the script.",
+          "red_line": null
+        },
+        {
+          "name": "prior_topic_not_retaught",
+          "passed": true,
+          "detail": "Prior topics are not obviously re-taught.",
+          "red_line": null
+        },
+        {
+          "name": "checkpoint_presence",
+          "passed": true,
+          "detail": "Found 8 checks/activities; expected at least 1.",
+          "red_line": null
+        },
+        {
+          "name": "live_code_when_required",
+          "passed": true,
+          "detail": "Found 10 live-code steps.",
+          "red_line": null
+        },
+        {
+          "name": "reviewability_rationales",
+          "passed": true,
+          "detail": "Every segment includes reviewer rationale.",
+          "red_line": null
+        }
+      ],
+      "judge": {
+        "scores": {
+          "coverage": 5.0,
+          "faithfulness": 5.0,
+          "level_fit": 5.0,
+          "pedagogy": 5.0,
+          "teachability": 5.0,
+          "pacing": 5.0,
+          "tone": 5.0,
+          "code_quality": 5.0,
+          "reviewability": 5.0
+        },
+        "red_lines": [],
+        "overall": 5.0,
+        "rationale": "Both agenda items ('Why indexes exist' and 'B-tree index mechanics') are taught with genuine substance, not just named. Durations sum to 45 min (20+25) and content/code minutes (27/18) match the requested 60/40 split precisely. The beginner-heavy calibration is handled well: intuitive analogies (book index, phone book) scaffold vocabulary before any SQL, comprehension checks and prediction polls are front-loaded, and advanced content (write/storage tradeoff, composite leftmost-prefix rule, planner Seq-Scan under low selectivity) is layered as clearly-tagged optional depth for the 30% without derailing the core narrative. Prior topics (basic SQL, primary keys) are used only as callbacks \u2014 e.g., the auto-indexed primary key motivates the driving question \u2014 and are never re-taught. Pedagogical sequence is motivation-first then mechanics, which suits the audience. The narration is specific, voiced, and teachable, with concrete EXPLAIN ANALYZE steps, expected outputs, worked examples, checks, and facilitation notes an instructor could deliver directly. Live-code is realistic and progressive (equality, range, ORDER BY, composite, low-selectivity), with expected plan outputs. Reviewer rationales are detailed and defensible. No red lines triggered. This reads like a strong human instructor's script."
+      },
+      "passed_gate": true,
+      "project_json_path": "eval/results/claude-opus-4-8/2026-07-07T15-55-40/projects/postgres_beginner.project.json",
+      "script_markdown_path": "eval/results/claude-opus-4-8/2026-07-07T15-55-40/scripts/postgres_beginner.script.md",
+      "error": null
+    },
+    {
+      "case_id": "postgres_advanced",
+      "category": "level_adaptivity",
+      "project_id": "project_05dd9345554b",
+      "generation_status": "READY_FOR_REVIEW",
+      "structural_passed": true,
+      "guardrails": [
+        {
+          "name": "agenda_coverage",
+          "passed": true,
+          "detail": "All agenda items are represented.",
+          "red_line": null
+        },
+        {
+          "name": "timing_sum",
+          "passed": true,
+          "detail": "Outline totals 90 minutes; brief requested 90.",
+          "red_line": null
+        },
+        {
+          "name": "content_code_ratio",
+          "passed": true,
+          "detail": "Actual code ratio 40%; target 40%.",
+          "red_line": null
+        },
+        {
+          "name": "stable_segment_ids",
+          "passed": true,
+          "detail": "Every draft maps to a stable outline segment.",
+          "red_line": null
+        },
+        {
+          "name": "must_cover_terms",
+          "passed": true,
+          "detail": "Expected terms appear in the script.",
+          "red_line": null
+        },
+        {
+          "name": "prior_topic_not_retaught",
+          "passed": true,
+          "detail": "Prior topics are not obviously re-taught.",
+          "red_line": null
+        },
+        {
+          "name": "checkpoint_presence",
+          "passed": true,
+          "detail": "Found 10 checks/activities; expected at least 3.",
+          "red_line": null
+        },
+        {
+          "name": "live_code_when_required",
+          "passed": true,
+          "detail": "Found 15 live-code steps.",
+          "red_line": null
+        },
+        {
+          "name": "reviewability_rationales",
+          "passed": true,
+          "detail": "Every segment includes reviewer rationale.",
+          "red_line": null
+        }
+      ],
+      "judge": {
+        "scores": {
+          "coverage": 5.0,
+          "faithfulness": 5.0,
+          "level_fit": 5.0,
+          "pedagogy": 5.0,
+          "teachability": 5.0,
+          "pacing": 5.0,
+          "tone": 5.0,
+          "code_quality": 5.0,
+          "reviewability": 5.0
+        },
+        "red_lines": [],
+        "overall": 5.0,
+        "rationale": "All four agenda items are taught with real substance: motivation via a slow-query story, B-tree internals with a traced lookup and leftmost-prefix rule, EXPLAIN/EXPLAIN ANALYZE node-by-node reading, and index selection iterated across five index states. Timing sums to 90 minutes (15+27+26+22) and content/code split (54/36) matches the 60/40 brief closely per segment. Audience calibration is genuinely advanced-heavy: beginner scaffolding is a single quick vocabulary check on 'sequential scan,' after which the script pushes into write amplification, bitmap scans, estimated-vs-actual divergence, covering/partial indexes, and over-indexing tradeoffs. Sequence is coherent, with each segment building on the prior and prior topics (basic SQL, primary keys) only referenced, never re-taught. Live code is realistic and concrete\u2014actual SQL, plausible EXPLAIN output, timing figures, INCLUDE and partial index syntax\u2014each step proving a narrated claim rather than dumping syntax. Checkpoints and activities are meaningful (predict-the-traversal, spot-the-misestimate, design-and-verify, over-indexing debate). Instructor narration is specific, conversational, and teachable with clear facilitation notes and instructor guidance; reviewer rationales explain design decisions per segment. No red lines triggered."
+      },
+      "passed_gate": true,
+      "project_json_path": "eval/results/claude-opus-4-8/2026-07-07T15-55-40/projects/postgres_advanced.project.json",
+      "script_markdown_path": "eval/results/claude-opus-4-8/2026-07-07T15-55-40/scripts/postgres_advanced.script.md",
+      "error": null
+    },
+    {
+      "case_id": "react_short_code_heavy",
+      "category": "constraint_tension",
+      "project_id": "project_75ab84bd5df5",
+      "generation_status": "READY_FOR_REVIEW",
+      "structural_passed": true,
+      "guardrails": [
+        {
+          "name": "agenda_coverage",
+          "passed": true,
+          "detail": "All agenda items are represented.",
+          "red_line": null
+        },
+        {
+          "name": "timing_sum",
+          "passed": true,
+          "detail": "Outline totals 45 minutes; brief requested 45.",
+          "red_line": null
+        },
+        {
+          "name": "content_code_ratio",
+          "passed": true,
+          "detail": "Actual code ratio 60%; target 60%.",
+          "red_line": null
+        },
+        {
+          "name": "stable_segment_ids",
+          "passed": true,
+          "detail": "Every draft maps to a stable outline segment.",
+          "red_line": null
+        },
+        {
+          "name": "must_cover_terms",
+          "passed": true,
+          "detail": "Expected terms appear in the script.",
+          "red_line": null
+        },
+        {
+          "name": "prior_topic_not_retaught",
+          "passed": true,
+          "detail": "Prior topics are not obviously re-taught.",
+          "red_line": null
+        },
+        {
+          "name": "checkpoint_presence",
+          "passed": true,
+          "detail": "Found 12 checks/activities; expected at least 1.",
+          "red_line": null
+        },
+        {
+          "name": "live_code_when_required",
+          "passed": true,
+          "detail": "Found 19 live-code steps.",
+          "red_line": null
+        },
+        {
+          "name": "reviewability_rationales",
+          "passed": true,
+          "detail": "Every segment includes reviewer rationale.",
+          "red_line": null
+        }
+      ],
+      "judge": {
+        "scores": {
+          "coverage": 5.0,
+          "faithfulness": 5.0,
+          "level_fit": 5.0,
+          "pedagogy": 5.0,
+          "teachability": 5.0,
+          "pacing": 5.0,
+          "tone": 5.0,
+          "code_quality": 5.0,
+          "reviewability": 5.0
+        },
+        "red_lines": [],
+        "overall": 5.0,
+        "rationale": "All five agenda items (local state, derived state, prop drilling, Context API, reducer pattern) are covered with real teaching substance, not just named. Durations sum exactly to 45 minutes (9+7+8+11+10), and each segment's content/code split honors the 60% code target (code minutes exceed content in every segment; ~18 content / ~27 code overall). Audience calibration is explicit and consistently executed: vocabulary scaffolding, 'prop or state?' checks, and radio-broadcast analogies serve the 65% beginners, while distinct advanced callouts (useMemo tradeoffs, Context re-render scope, useState-vs-useReducer, dispatch identity stability) genuinely differentiate the 35% advanced cohort \u2014 no R8 violation. Prior topics (components, props, event handlers) are reused as callbacks and never re-taught, so no R6. The pedagogical sequence is excellent: a cumulative refactoring ladder (like button \u2192 cart \u2192 user tree \u2192 Context \u2192 reducer) where each segment motivates the next, with the diagnose-before-fix pattern (spot-the-bug in derived state, feel-the-pain in prop drilling before Context). Checkpoints and discussions are meaningful and level-targeted throughout, so no R7. The narration reads like a genuine, teachable instructor script with anticipated misconceptions (double-setCount stale closure, 'reducer deletes from array' framing) and concrete facilitation notes \u2014 not generic AI prose, so no R9/R10. Live code is incremental, correct, and each step has explanation and expected output. Reviewer rationales are specific and tie decisions back to the brief. This is essentially what a strong human instructor would produce."
+      },
+      "passed_gate": true,
+      "project_json_path": "eval/results/claude-opus-4-8/2026-07-07T15-55-40/projects/react_short_code_heavy.project.json",
+      "script_markdown_path": "eval/results/claude-opus-4-8/2026-07-07T15-55-40/scripts/react_short_code_heavy.script.md",
+      "error": null
+    }
+  ],
+  "pairs": [
+    {
+      "pair_id": "postgres_level_pair",
+      "beginner_case_id": "postgres_beginner",
+      "advanced_case_id": "postgres_advanced",
+      "judge": {
+        "meaningfully_different": true,
+        "vocabulary_difference": "The beginner-heavy script leans on extended plain-language analogies (900-page book with no index, phone contacts) and defines every term in bold before use ('sequential scan', 'query cost', 'selectivity', 'lookup structure'). The advanced-heavy script uses terminology tersely and introduces jargon like 'write amplification', 'TID', 'heap fetches', 'Bitmap Heap Scan', 'INCLUDE covering index', 'partial index', 'cardinality', and 'index-only scan' with minimal scaffolding, assuming the reader already parses these.",
+        "pacing_difference": "Beginner script spans 45 minutes over 2 segments with a slow motivation-first arc, frequent pauses, and repeated re-anchoring. Advanced script covers 90 minutes over 4 segments, compresses motivation into a single 15-min segment ('move quickly through motivation'), and spends the bulk of time on internals, EXPLAIN literacy, and index selection \u2014 a noticeably faster ramp with denser concept-per-minute loading.",
+        "assumed_knowledge_difference": "Beginner version re-confirms comfort with SELECT/WHERE, treats EXPLAIN as brand-new, and explicitly notes learners have never seen index internals. Advanced version assumes fluency with EXPLAIN vocabulary as a starting point, layers estimated-vs-actual row divergence, bitmap scans, and planner cost math, and treats leftmost-prefix and read/write tradeoffs as callbacks rather than fresh teaching.",
+        "example_depth_difference": "Beginner examples stop at seq-scan vs index-scan on a users table and a single selectivity caveat. Advanced examples iterate a single query across five index states (none \u2192 single \u2192 composite \u2192 covering INCLUDE \u2192 partial), plus bitmap heap scans, functional-index distractors, index-only scans, and over-indexing tradeoff debates \u2014 substantially deeper and more branched.",
+        "code_complexity_difference": "Beginner live code is 4 simple steps (EXPLAIN ANALYZE before/after a CREATE INDEX). Advanced code includes composite indexes with DESC ordering, INCLUDE covering indexes, partial indexes with WHERE clauses, \\di+ size inspection, bitmap scan plans, and estimated-vs-actual analysis \u2014 clearly higher SQL and plan-reading complexity.",
+        "checkpoint_difference": "Beginner checkpoints are prediction polls and simple 'is this Seq Scan or Index Scan?' identification with generous, intuitive expected answers. Advanced checkpoints demand reasoning: why a function-wrapped column defeats an index, why a valid index is skipped due to selectivity, spotting estimated-vs-actual divergence, and designing an optimal composite+covering index \u2014 evaluative rather than recognition-level.",
+        "too_similar_risk": "Low. Shared analogies (book index, phone book) and the same base narrative overlap slightly, but agenda scope (2 vs 4 items), duration (45 vs 90 min), depth, and code complexity diverge strongly enough to distinguish the two levels clearly.",
+        "pass_": true
+      },
+      "passed_gate": true,
+      "error": null
+    }
+  ],
+  "passed_gate": true
+}

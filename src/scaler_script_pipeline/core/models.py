@@ -154,8 +154,8 @@ class ComprehensionCheck(BaseModel):
 class Activity(BaseModel):
     type: ActivityType
     prompt: str
-    expected_response: str
-    facilitation_notes: str
+    expected_response: str = ""
+    facilitation_notes: str = ""
 
 
 class SegmentDraft(BaseModel):

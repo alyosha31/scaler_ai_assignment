@@ -351,6 +351,7 @@ class ScriptPipeline:
         self, project_id: str, segment_id: str, request: SegmentEditRequest
     ) -> ScriptProject:
         project = self.get_project(project_id)
+        self._ensure_project_editable(project)
         draft = self._find_segment_draft(project, segment_id)
         logger.info("segment.edit project_id=%s segment_id=%s version_before=%s", project_id, draft.id, draft.version)
         before = draft.instructor_narration
@@ -377,6 +378,7 @@ class ScriptPipeline:
         self, project_id: str, segment_id: str, request: SegmentRegenerateRequest
     ) -> ScriptProject:
         project = self.get_project(project_id)
+        self._ensure_project_editable(project)
         if project.outline is None:
             raise HTTPException(status_code=400, detail="Project has no outline")
         draft = self._find_segment_draft(project, segment_id)
@@ -488,6 +490,13 @@ class ScriptPipeline:
         )
         return self.repository.save(project)
 
+    def _ensure_project_editable(self, project: ScriptProject) -> None:
+        if project.sign_off and project.sign_off.approved:
+            raise HTTPException(
+                status_code=409,
+                detail="Project is signed off and locked. Create a new project or add a reopen-review flow before editing.",
+            )
+
     def export_markdown(self, project_id: str) -> str:
         project = self.get_project(project_id)
         lines = [
@@ -517,9 +526,12 @@ class ScriptPipeline:
                     "",
                     f"Timing: {draft.duration_minutes} min ({draft.content_minutes} content / {draft.code_minutes} code)",
                     "",
+                    f"**Transition in:** {outline.transition_in}",
+                    "",
                     "### Instructor Script",
                     "",
                     *self._render_segment_markdown(draft),
+                    f"**Transition out:** {outline.transition_out}",
                     "",
                 ]
             )
@@ -564,6 +576,17 @@ class ScriptPipeline:
 
         for step in code_steps:
             lines.extend([f"**Live code {step.order}: {step.instruction}**", "", f"```text\n{step.code}\n```", step.explanation, ""])
+        for example in draft.worked_examples:
+            lines.extend(
+                [
+                    f"**Worked example:** {example.setup}",
+                    "",
+                    example.walkthrough,
+                    "",
+                    f"- Takeaway: {example.takeaway}",
+                    "",
+                ]
+            )
         for check in checks:
             lines.extend([f"**Checkpoint:** {check.question}", "", f"- Expected: {check.expected_answer}", f"- Guidance: {check.instructor_guidance}", ""])
         for activity in activities:

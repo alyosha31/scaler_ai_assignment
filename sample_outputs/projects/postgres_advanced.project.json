@@ -1,0 +1,490 @@
+{
+  "id": "project_05dd9345554b",
+  "brief": {
+    "topic": "Indexing in PostgreSQL",
+    "agenda": [
+      "Why indexes exist",
+      "B-tree index mechanics",
+      "Reading EXPLAIN plans",
+      "Choosing indexes for common queries"
+    ],
+    "beginner_percentage": 20,
+    "advanced_percentage": 80,
+    "duration_minutes": 90,
+    "content_percentage": 60,
+    "code_percentage": 40,
+    "topics_already_covered": [
+      "basic SQL",
+      "primary keys"
+    ]
+  },
+  "validation": {
+    "is_valid": true,
+    "warnings": [],
+    "errors": [],
+    "normalized_brief": {
+      "topic": "Indexing in PostgreSQL",
+      "agenda": [
+        "Why indexes exist",
+        "B-tree index mechanics",
+        "Reading EXPLAIN plans",
+        "Choosing indexes for common queries"
+      ],
+      "beginner_percentage": 20,
+      "advanced_percentage": 80,
+      "duration_minutes": 90,
+      "content_percentage": 60,
+      "code_percentage": 40,
+      "topics_already_covered": [
+        "basic SQL",
+        "primary keys"
+      ]
+    }
+  },
+  "outline": {
+    "id": "outline-pg-indexing-90",
+    "topic": "Indexing in PostgreSQL",
+    "total_duration_minutes": 90,
+    "audience_calibration": "Audience is 80% advanced, 20% beginner. Move quickly through motivation, spend most time on B-tree internals, EXPLAIN plan reading, and index selection tradeoffs. Use minimal vocabulary scaffolding (one quick check early), then favor deeper examples, cost tradeoffs, and real EXPLAIN ANALYZE output. Assume comfort with basic SQL and primary keys.",
+    "target_content_minutes": 54,
+    "target_code_minutes": 36,
+    "segments": [
+      {
+        "id": "seg_outline_2bd5585f93e8",
+        "order": 1,
+        "agenda_item": "Why indexes exist",
+        "title": "The Cost of Full Scans: Why Indexes Exist",
+        "duration_minutes": 15,
+        "content_minutes": 11,
+        "code_minutes": 4,
+        "learning_objective": "Explain what problem indexes solve and articulate the read-speed vs write-cost/storage tradeoff.",
+        "concepts_introduced": [
+          "sequential scan vs index scan",
+          "index as auxiliary data structure",
+          "write amplification and storage overhead"
+        ],
+        "concepts_assumed": [
+          "basic SQL",
+          "primary keys"
+        ],
+        "concepts_reinforced": [
+          "how a query filters rows"
+        ],
+        "teaching_strategy": "Start with a concrete slow-query scenario on a large table, then contrast expected behavior with and without an index. Keep beginner scaffolding to a single quick vocabulary check on 'sequential scan'. For advanced learners, immediately frame indexes as a tradeoff rather than a free win.",
+        "example_plan": "Show a 5M-row 'orders' table; run a SELECT with a WHERE on an unindexed column and note the wall-clock time, then create an index and rerun to show the difference.",
+        "activity_plan": [
+          "Quick poll: predict which is faster and why",
+          "One-line vocabulary check: what does 'sequential scan' mean?"
+        ],
+        "transition_in": "Open with a relatable pain point: a query that used to be fast is now crawling as data grew.",
+        "transition_out": "We saw indexes help dramatically—now let's open the hood on the most common index type to understand why.",
+        "rationale": "Motivation must be brief for an advanced-heavy group but grounded enough to justify tradeoffs discussed later; a single beginner check covers the 20% minority without slowing pace."
+      },
+      {
+        "id": "seg_outline_edf24649a5e1",
+        "order": 2,
+        "agenda_item": "B-tree index mechanics",
+        "title": "Inside the B-tree: How Lookups Actually Work",
+        "duration_minutes": 27,
+        "content_minutes": 18,
+        "code_minutes": 9,
+        "learning_objective": "Describe B-tree structure and traversal, and reason about which query shapes a B-tree can and cannot accelerate.",
+        "concepts_introduced": [
+          "B-tree node structure and levels",
+          "logarithmic lookup",
+          "range scans and ordered traversal",
+          "index-only scans",
+          "leftmost-prefix rule for composite indexes"
+        ],
+        "concepts_assumed": [
+          "primary keys",
+          "sequential scan vs index scan"
+        ],
+        "concepts_reinforced": [
+          "read speed vs write cost tradeoff"
+        ],
+        "teaching_strategy": "Diagram-first explanation of tree structure, then map query patterns (equality, range, ORDER BY, prefix) onto traversal behavior. Move fast and emphasize the 'why' behind supported operations; include composite index ordering as a deeper tradeoff point for advanced learners.",
+        "example_plan": "Sketch a 3-level B-tree over an integer column, walk a lookup path, then demonstrate live: equality query, range query, ORDER BY served by the index, and a composite index where column order changes usability.",
+        "activity_plan": [
+          "Predict-the-traversal: given an index, which of 4 queries can use it?",
+          "Discuss why leading-column mismatch breaks a composite index"
+        ],
+        "transition_in": "Indexes helped—here's the data structure making that possible.",
+        "transition_out": "Now that you know what a B-tree can do, let's learn to read what Postgres actually decides to do.",
+        "rationale": "This is the technical core and gets the largest time block; the content/code split leans on diagrams (content) plus live demos (code) matching the advanced audience's appetite for internals."
+      },
+      {
+        "id": "seg_outline_173152403c1b",
+        "order": 3,
+        "agenda_item": "Reading EXPLAIN plans",
+        "title": "Reading EXPLAIN and EXPLAIN ANALYZE",
+        "duration_minutes": 26,
+        "content_minutes": 15,
+        "code_minutes": 11,
+        "learning_objective": "Interpret EXPLAIN/EXPLAIN ANALYZE output to identify scan types, cost estimates, and estimate-vs-actual row discrepancies.",
+        "concepts_introduced": [
+          "EXPLAIN vs EXPLAIN ANALYZE",
+          "cost, rows, width fields",
+          "Seq Scan / Index Scan / Index Only Scan / Bitmap Heap Scan nodes",
+          "estimated vs actual rows and planner misestimation"
+        ],
+        "concepts_assumed": [
+          "sequential scan vs index scan",
+          "B-tree traversal"
+        ],
+        "concepts_reinforced": [
+          "when an index is chosen vs a full scan"
+        ],
+        "teaching_strategy": "Hands-on plan reading. Start with a simple plan, name each field, then progressively add complexity (filters, joins) to show node changes. Highlight when the planner ignores an index and why—a key advanced tradeoff discussion.",
+        "example_plan": "Run EXPLAIN then EXPLAIN ANALYZE on the same queries from earlier; show a Bitmap Heap Scan for a medium-selectivity predicate and a case where a Seq Scan wins despite an available index.",
+        "activity_plan": [
+          "Read a plan together and annotate each node",
+          "Spot-the-problem: find where estimated rows diverges from actual"
+        ],
+        "transition_in": "The planner is the judge of your indexes—let's learn its language.",
+        "transition_out": "You can now read the plan; next we use it to make deliberate indexing decisions.",
+        "rationale": "EXPLAIN literacy is the bridge skill between mechanics and practical choices; heavier code weighting suits the advanced, hands-on audience."
+      },
+      {
+        "id": "seg_outline_436ed884c4d7",
+        "order": 4,
+        "agenda_item": "Choosing indexes for common queries",
+        "title": "Choosing the Right Index for Real Queries",
+        "duration_minutes": 22,
+        "content_minutes": 10,
+        "code_minutes": 12,
+        "learning_objective": "Select appropriate indexes (single-column, composite, covering) for common query patterns and justify choices using selectivity and plan feedback.",
+        "concepts_introduced": [
+          "selectivity and cardinality",
+          "composite column ordering strategy",
+          "covering indexes (INCLUDE)",
+          "partial indexes",
+          "over-indexing and write-cost tradeoffs"
+        ],
+        "concepts_assumed": [
+          "EXPLAIN reading",
+          "leftmost-prefix rule",
+          "read vs write tradeoff"
+        ],
+        "concepts_reinforced": [
+          "B-tree capabilities",
+          "plan node interpretation"
+        ],
+        "teaching_strategy": "Case-driven: present real query patterns (filter+sort, multi-column filter, high-write table) and derive the index choice, verifying each with EXPLAIN. Emphasize tradeoffs and when NOT to add an index.",
+        "example_plan": "For a query filtering on status and sorting by created_at, iterate: no index -> single column -> composite -> covering, showing plan and cost changes at each step; then discuss a partial index for a skewed status value.",
+        "activity_plan": [
+          "Design an index for a given query, then verify with EXPLAIN ANALYZE",
+          "Debate: add a fifth index to a write-heavy table—worth it?"
+        ],
+        "transition_in": "Now let's turn plan-reading into concrete indexing decisions.",
+        "transition_out": "Let's consolidate the decision framework and where to go next.",
+        "rationale": "The applied payoff segment; code-heavy and tradeoff-rich to match advanced learners, closing the loop from motivation to mechanics to measurement to decision."
+      }
+    ],
+    "recap_plan": "Summarize the arc: indexes trade write/storage cost for read speed; B-trees enable log-time lookups, ranges, ordered scans, and index-only scans with leftmost-prefix rules; EXPLAIN/ANALYZE reveals what the planner actually does and where estimates go wrong; index choice follows from selectivity, query shape, and verified plans. Reinforce with a one-slide decision checklist.",
+    "next_steps_plan": "Point to next sessions and practice: GIN/GiST/BRIN index types, index maintenance (bloat, REINDEX), ANALYZE/statistics and planner tuning, and a hands-on assignment to profile and index a provided slow-query workload using EXPLAIN ANALYZE.",
+    "global_assumptions": [
+      "Learners can write and read basic SQL SELECT/WHERE/ORDER BY queries",
+      "Learners understand primary keys and that PKs are backed by a unique index",
+      "A PostgreSQL instance with a large sample dataset is available for live demos"
+    ],
+    "design_rationale": [
+      "Durations sum to 90 (15+27+26+22) with content 54 and code 36 matching the 60/40 target.",
+      "Largest time given to B-tree mechanics and EXPLAIN reading, the highest-value depth areas for an 80% advanced audience.",
+      "Beginner scaffolding limited to two lightweight checks early; later segments accelerate into tradeoffs and deeper examples.",
+      "Prior topics (basic SQL, primary keys) are assumed and only called back to (e.g., PK-backed index), never re-taught.",
+      "Code weighting increases across segments as the class shifts from concept to hands-on decision-making."
+    ],
+    "warnings": []
+  },
+  "segments": [
+    {
+      "id": "seg_draft_0c45de85531f",
+      "outline_id": "seg_outline_2bd5585f93e8",
+      "duration_minutes": 15,
+      "content_minutes": 11,
+      "code_minutes": 4,
+      "instructor_narration": "Let's start with a story that probably feels familiar. You ship a feature, everything is snappy in development, and the orders table has a few thousand rows. Six months later that same table has five million rows, and a query that used to return in milliseconds now takes several seconds. Nothing in your code changed. So what happened?\n\nHere's the core issue: when you filter on a column that has no index, PostgreSQL has no shortcut. It has to look at every single row to decide which ones match your WHERE clause. That's a sequential scan—reading the table top to bottom. When you had a few thousand rows, scanning all of them was cheap. At five million rows, you're paying for every one of them on every query.\n\n[ACTIVITY]\n\nQuick vocabulary alignment before we go further, since we've got a range of backgrounds here.\n\n[CHECKPOINT]\n\nGood. So a sequential scan is Postgres reading the whole table. The alternative we want is an index scan, where Postgres uses a secondary data structure to jump more or less straight to the rows it needs. And that's the key mental model I want you to leave with: an index is an auxiliary data structure. It is a separate on-disk structure that Postgres maintains alongside your table, storing your column values in an organized, searchable order along with pointers back to the actual rows. It is not part of the table's own storage—it's an extra copy of specific columns kept in a shape that's fast to search.\n\nLet me make this concrete instead of hand-wavy. I've got an orders table here with five million rows. Let's watch the difference.\n\n[CODE_STEP]\n\nNotice that wall-clock time. Now let's give Postgres a shortcut.\n\n[CODE_STEP]\n\nAnd rerun the exact same query.\n\n[CODE_STEP]\n\nThat's the whole pitch for indexes in one demo—orders of magnitude faster on reads. But here's where I want the advanced folks especially to resist the temptation to index everything. An index is not free. Think about what has to happen on every INSERT, UPDATE, or DELETE: Postgres doesn't just modify the table row, it also has to keep every relevant index up to date. That's write amplification—one logical write becomes multiple physical writes because each index touching that column needs maintenance. On top of that, the index consumes real disk space; a large composite or covering index can rival the size of the table itself.\n\nSo the real framing for the rest of this session is a tradeoff, not a win. Indexes buy you read speed and pay for it with write cost and storage. Every index you add makes writes a little slower and your database a little bigger. The engineering skill is deciding which reads are worth that price. We'll spend the back half of today learning to make exactly that call with data instead of guesses.",
+      "live_code_steps": [
+        {
+          "order": 1,
+          "instruction": "Run a filtered query against the unindexed created_at column and capture the timing.",
+          "code": "\\timing on\nSELECT * FROM orders WHERE customer_id = 48213;",
+          "explanation": "With no index on customer_id, Postgres must sequentially scan all 5M rows to find matches. Point out the wall-clock time in the output.",
+          "expected_output": "Rows returned after a multi-second delay, e.g. 'Time: 2841.552 ms'"
+        },
+        {
+          "order": 2,
+          "instruction": "Create a B-tree index on the filtered column.",
+          "code": "CREATE INDEX idx_orders_customer_id ON orders (customer_id);",
+          "explanation": "This builds the auxiliary data structure. Mention it takes a moment because Postgres is reading the whole table once to construct the index, and this structure now lives on disk separately from the table.",
+          "expected_output": "CREATE INDEX"
+        },
+        {
+          "order": 3,
+          "instruction": "Rerun the identical query and compare timing.",
+          "code": "SELECT * FROM orders WHERE customer_id = 48213;",
+          "explanation": "Same query, dramatically faster because Postgres can now use the index to locate matching rows directly instead of scanning all 5M. Contrast the new time against step 1.",
+          "expected_output": "Same rows returned quickly, e.g. 'Time: 3.204 ms'"
+        }
+      ],
+      "worked_examples": [
+        {
+          "setup": "A 5M-row orders table with no index on customer_id, and a common lookup query filtering by a single customer.",
+          "walkthrough": "First run the query as-is and note the multi-second sequential scan cost. Then create a B-tree index on customer_id and rerun the exact same query, observing the drop from seconds to milliseconds. Finally, discuss what Postgres now had to build and must maintain going forward.",
+          "takeaway": "An index converts a full-table scan into a targeted lookup for reads, but it introduces an ongoing maintenance and storage cost that must be justified per query pattern."
+        }
+      ],
+      "checks": [
+        {
+          "question": "In one sentence, what does a 'sequential scan' mean in PostgreSQL?",
+          "expected_answer": "Postgres reads through every row in the table to find the ones matching the query, rather than using a shortcut.",
+          "instructor_guidance": "Keep this to 20-30 seconds. Accept any answer that captures 'reads the whole table.' If someone says 'it's slow,' redirect: slow is the consequence, not the definition. This is the single beginner scaffold for the segment—don't dwell."
+        }
+      ],
+      "activities": [
+        {
+          "type": "CHECKPOINT",
+          "prompt": "Quick poll: I'm about to run the same query twice—once before adding an index and once after. Which will be faster, and by roughly how much: a little, or a lot?",
+          "expected_response": "The indexed run will be faster, and for a selective filter on a 5M-row table it should be dramatically faster—orders of magnitude, not a small percentage.",
+          "facilitation_notes": "Take a quick show of hands or chat responses. Most will guess 'a lot'—use that to build anticipation for the demo. If anyone hedges toward 'a little,' note that the magnitude is exactly what surprises people and is why indexes matter. Keep under 90 seconds."
+        }
+      ],
+      "reviewer_rationale": "Segment is advanced-heavy (80%), so motivation is kept tight: a single relatable scenario and one before/after demo carry the point rather than lengthy theory. The lone beginner scaffold is a fast vocabulary check on 'sequential scan,' satisfying the 20% minority without slowing pace, per the teaching strategy. The three concepts introduced (seq vs index scan, index as auxiliary structure, write amplification/storage overhead) are each hit explicitly, with the tradeoff framing emphasized for advanced learners so it sets up the selectivity and write-cost discussion in segment 4. Code steps consume the allotted 4 minutes with a clean run/create/rerun arc that produces a visceral timing contrast. Callbacks respect already-covered basic SQL and primary keys without re-teaching. The transition out points directly at B-tree internals in segment 2.",
+      "status": "GENERATED",
+      "version": 1
+    },
+    {
+      "id": "seg_draft_edf24649a5e1",
+      "outline_id": "seg_outline_edf24649a5e1",
+      "duration_minutes": 27,
+      "content_minutes": 18,
+      "code_minutes": 9,
+      "instructor_narration": "In the last segment we saw that an index scan crushed a sequential scan on a selective lookup. Good—but I don't want you treating the index as a magic box. Today we open the box. Because once you understand the *shape* of the data structure, you can predict, without running anything, which queries an index will accelerate and which it will quietly ignore.\n\nLet me draw the structure. I'm sketching a tree here—three levels. At the very top, one node: the root. Below it, a handful of internal nodes. And at the bottom, a wide row of leaf nodes. This is a B-tree. Note it's a B-tree, not a binary tree—each node holds many keys, not just one, and it stays balanced: every leaf is at the same depth. That balance is the whole point.\n\nWalk with me through what's actually stored. Each internal node holds sorted key values and pointers that say 'values less than 50 go left, values between 50 and 100 go here, values 100 and up go right.' The leaf nodes hold the indexed key values in sorted order, and alongside each key, a pointer—in Postgres terms, a TID—back to the actual row in the heap. So the index is a sorted, navigable map from key to row location.\n\nNow let's do a lookup. Suppose I ask for the row where id = 73. I start at the root. I compare 73 against the separator keys, pick the child pointer whose range contains 73, drop down one level, compare again, drop to the leaf, and there's my key with its heap pointer. Notice how many comparisons that took: one per level. Three levels, three hops. And here's the beautiful part—because each node fans out to hundreds of children, a three-to-four level B-tree can index *hundreds of millions* of rows. Doubling your table doesn't double your lookup work; it maybe adds one level. That's logarithmic lookup. Sequential scan is linear—work grows with row count. Index lookup is logarithmic—work barely grows at all. That gap is why indexes matter at scale.\n\nNow the part most people miss. Because the leaves are stored *in sorted order* and linked to their neighbors, a B-tree isn't just good at 'find one value.' It's good at anything that benefits from sorted order.\n\nEquality—id = 73—one path down, done. Range—id BETWEEN 50 AND 200—find the start of the range, then just walk the linked leaves in order until you pass 200. No re-descending the tree. ORDER BY on the indexed column—the leaves are *already* in that order, so Postgres can read them in sequence and skip a sort entirely. That last one surprises people: an index can eliminate a sort step, not just a filter step.\n\nLet me show you all of this live rather than just assert it. [CODE_STEP]\n\nSo equality, range, and ordered traversal all fall out of the same sorted structure. [CODE_STEP]\n\nThere's one more capability worth naming: the index-only scan. Normally after finding a key in the leaf, Postgres follows the pointer to the heap to fetch the rest of the row's columns. But if *every column your query needs* is already in the index, there's no reason to visit the heap at all—it can answer straight from the index. That's an index-only scan, and it's dramatically faster because it skips the heap fetch. Hold that thought; we'll exploit it deliberately with covering indexes in the final segment.\n\n[CHECKPOINT]\n\nNow the deeper topic, and this is where composite indexes bite people. Suppose I build an index on (last_name, first_name)—two columns, in that order. Think of it like a phone book: sorted by last name first, and *within* each last name, sorted by first name. [CODE_STEP]\n\nHere's the rule that governs everything: the leftmost-prefix rule. A B-tree on (a, b, c) can serve queries that filter on a, or on a and b, or on a, b, and c. It can serve a filter on a with a range on b. But it *cannot* efficiently serve a query that filters only on b, skipping a. Why? Go back to the phone book. If I ask 'find everyone whose first name is Maria,' the phone book is useless—Marias are scattered across every last name. The sort order only helps you if you constrain the leading column first. Same with the index: without a value for the leading column, there's no single contiguous range in the leaves to walk. So column order in a composite index is not cosmetic—it decides which queries the index can accelerate.\n\n[ACTIVITY]\n\nAnd remember the tradeoff we keep circling back to: every one of these indexes is a second sorted structure that must be updated on every insert, update, and delete of the indexed columns. The B-tree buys you logarithmic reads at the cost of extra write work and storage. That's the lever you're always pulling.\n\nYou now know what a B-tree *can* do—equality, ranges, ordered scans, index-only scans, and prefix matching on composites. Next we learn to read what Postgres actually *decides* to do, because knowing the capability and confirming the planner uses it are two different skills.",
+      "live_code_steps": [
+        {
+          "order": 1,
+          "instruction": "On a table 'accounts' with an indexed integer column 'id', run an equality lookup and a range query under EXPLAIN to show the index scan and range traversal.",
+          "code": "EXPLAIN SELECT * FROM accounts WHERE id = 73;\n\nEXPLAIN SELECT * FROM accounts WHERE id BETWEEN 50 AND 200;",
+          "explanation": "The equality query descends the tree once. The range query finds the low bound then walks sorted leaves—point out that both show an Index Scan, and the range doesn't re-descend for each value.",
+          "expected_output": "Both plans show 'Index Scan using accounts_pkey on accounts', the range plan with an Index Cond of (id >= 50 AND id <= 200)."
+        },
+        {
+          "order": 2,
+          "instruction": "Show the index serving an ORDER BY without a separate sort step.",
+          "code": "EXPLAIN SELECT id FROM accounts ORDER BY id LIMIT 10;",
+          "explanation": "Highlight the absence of a 'Sort' node. Because leaves are pre-sorted, Postgres reads them in order and stops after 10 rows—no sort, no full scan.",
+          "expected_output": "Plan shows an Index Only Scan or Index Scan feeding a Limit, with no Sort node present."
+        },
+        {
+          "order": 3,
+          "instruction": "Create a composite index and contrast two queries: one that respects the leading column and one that skips it.",
+          "code": "CREATE INDEX idx_name ON people (last_name, first_name);\n\nEXPLAIN SELECT * FROM people WHERE last_name = 'Nguyen' AND first_name = 'Maria';\n\nEXPLAIN SELECT * FROM people WHERE first_name = 'Maria';",
+          "explanation": "The first query uses idx_name via the leftmost prefix. The second, filtering only on first_name, cannot use it as an efficient tree descent—expect a Seq Scan. This is the phone-book intuition made concrete.",
+          "expected_output": "First query: Index Scan using idx_name. Second query: Seq Scan on people (index skipped)."
+        }
+      ],
+      "worked_examples": [
+        {
+          "setup": "A 3-level B-tree over an integer id column, drawn on the board: root with separators, internal nodes, sorted linked leaves each pointing to heap rows.",
+          "walkthrough": "Trace id = 73: root comparison selects a child range, internal node comparison narrows further, leaf holds key 73 plus its heap TID. Count the three hops and connect to logarithmic growth versus linear sequential scan.",
+          "takeaway": "Lookup cost scales with tree depth, not table size; high fan-out means depth grows extremely slowly."
+        }
+      ],
+      "checks": [
+        {
+          "question": "You have a B-tree index on the column 'created_at'. Which of these can the index accelerate: (a) created_at = '2024-01-01', (b) created_at > '2024-01-01', (c) ORDER BY created_at, (d) DATE_PART('year', created_at) = 2024?",
+          "expected_answer": "a, b, and c can all use it; d cannot, because wrapping the column in a function destroys the sorted ordering the index relies on.",
+          "instructor_guidance": "Push on (d) specifically—advanced learners should articulate that the index stores raw column values, not the function's output, so the sorted structure no longer maps to the query. Tease functional indexes as the fix without teaching them here."
+        }
+      ],
+      "activities": [
+        {
+          "type": "CHECKPOINT",
+          "prompt": "Given an index on a single integer column, which of these four queries can use it, and why: point equality, a BETWEEN range, ORDER BY on that column, and a query needing only that column in its SELECT list?",
+          "expected_response": "All four can use it: equality via descent, range via ordered leaf walk, ORDER BY via pre-sorted leaves, and the SELECT-only case via an index-only scan.",
+          "facilitation_notes": "Call on a couple of learners rapid-fire. The goal is to confirm they connect each query shape to the sorted-leaf structure rather than memorizing a list."
+        },
+        {
+          "type": "DISCUSSION",
+          "prompt": "We have an index on (last_name, first_name). A query filters only on first_name and is slow. Why does the composite index fail to help, and what would you change?",
+          "expected_response": "The leading column last_name isn't constrained, so there's no contiguous leaf range to walk—the phone-book problem. Fixes: reorder columns to (first_name, last_name) if that query pattern dominates, or add a separate index on first_name, weighed against write cost.",
+          "facilitation_notes": "Let learners debate reorder-vs-add-index. Steer toward 'it depends on which queries are hot' and flag that this is exactly the selectivity/ordering decision we'll formalize in the final segment."
+        }
+      ],
+      "reviewer_rationale": "Depth targets the 80% advanced audience: the diagram and logarithmic-lookup framing are covered briskly (assumed comfort with seq vs index scan from segment 1), while the composite/leftmost-prefix material gets the most narrative weight and a discussion activity because that's where advanced learners make real mistakes. Live code stays tight to 9 minutes across three EXPLAIN demos that each prove a claim made in narration (range walk, sort elimination, prefix failure) rather than introducing new syntax. Index-only scans and the write-cost callback are seeded deliberately as hooks for segments 3 and 4 without pre-teaching covering/partial indexes. The functional-index checkpoint distractor stretches strong learners while remaining answerable from today's material.",
+      "status": "GENERATED",
+      "version": 1
+    },
+    {
+      "id": "seg_draft_173152403c1b",
+      "outline_id": "seg_outline_173152403c1b",
+      "duration_minutes": 26,
+      "content_minutes": 15,
+      "code_minutes": 11,
+      "instructor_narration": "The planner is the judge of your indexes—let's learn its language. Everything we've discussed so far—sequential versus index scans, how a B-tree lets us do logarithmic lookups—all of that is theory until PostgreSQL actually chooses a plan for your query. And the way it tells you what it decided is EXPLAIN. So in this segment our goal is simple but powerful: you'll be able to look at an EXPLAIN plan and read it like a sentence—what scan type ran, what it cost, and whether the planner's guesses matched reality.\n\nLet's start with the core distinction. EXPLAIN alone shows you the plan the planner *intends* to use, with its cost estimates—it does not run the query. EXPLAIN ANALYZE actually *executes* the query and shows you both the estimates and the real numbers. Think of EXPLAIN as reading the recipe and EXPLAIN ANALYZE as cooking the dish and tasting it. The distinction matters enormously: EXPLAIN is cheap and safe, but its numbers are predictions. ANALYZE gives you ground truth—at the cost of actually running the statement, which you'll want to be careful about on writes or expensive queries in production.\n\nLet's put a plan on screen. [CODE_STEP]\n\nNow let's read this line by line, because every field earns its place. The node type at the top tells you the operation—here a Seq Scan. The `cost=0.00..431.00` is a pair: startup cost before the first row, and total cost to return all rows. These are arbitrary planner units, not milliseconds—don't confuse them with time. `rows=10000` is the planner's *estimate* of how many rows this node emits. `width=45` is the estimated average row size in bytes. Memorize that trio: cost, rows, width. You'll read it on every node.\n\nNow let's make the plan choose an index instead of scanning everything. [CODE_STEP]\n\nSee how the node changed to an Index Scan? That's the planner deciding the index is cheaper for this selective predicate—a direct callback to what we discussed about when an index beats a full scan. Notice the Index Cond line: that's the condition the index itself is satisfying, versus a Filter line which is applied after fetching rows.\n\nHere's where it gets interesting for real workloads. When a predicate is neither highly selective nor totally unselective—say it matches five or ten percent of the table—PostgreSQL often picks something in between: a Bitmap Heap Scan. [CODE_STEP]\n\nWalk through what's happening: the Bitmap Index Scan builds an in-memory bitmap of which heap pages contain matching rows, then the Bitmap Heap Scan visits those pages in physical order. This is the planner's answer to 'too many rows for a plain index scan, too few to justify reading the whole table.' Medium selectivity is exactly the bitmap sweet spot.\n\nAnd now the counterintuitive case that trips up even experienced engineers. [CODE_STEP]\n\nThe index exists—but the planner chose a Seq Scan anyway. Why? Because the predicate matches a large fraction of the table. Random heap fetches through an index become more expensive than just streaming the whole table sequentially. The planner isn't broken; it's doing cost-based math. This is the single most important lesson of the segment: an available index is not a used index.\n\n[CHECKPOINT]\n\nNow, the reason EXPLAIN ANALYZE is your real diagnostic tool: it shows estimated rows *and* actual rows side by side. When those two numbers diverge wildly, that's your signal that the planner is working from bad statistics—and a bad estimate is the root cause of most bad plans you'll ever debug.\n\n[ACTIVITY]\n\nYou can now read the plan; next we use it to make deliberate indexing decisions.",
+      "live_code_steps": [
+        {
+          "order": 1,
+          "instruction": "Run a plain EXPLAIN on an unfiltered query to see a baseline Seq Scan and name every field.",
+          "code": "EXPLAIN\nSELECT * FROM orders;",
+          "explanation": "This is the simplest possible plan. Use it to introduce the node type (Seq Scan), the cost pair (startup..total), rows, and width. No predicate means nothing to filter, so we get the cleanest possible reading of the field vocabulary.",
+          "expected_output": "Seq Scan on orders  (cost=0.00..431.00 rows=10000 width=45)"
+        },
+        {
+          "order": 2,
+          "instruction": "Add a highly selective equality predicate on an indexed column to trigger an Index Scan.",
+          "code": "EXPLAIN\nSELECT * FROM orders WHERE id = 4217;",
+          "explanation": "With a unique or near-unique match, the planner expects one row and chooses an Index Scan. Point out the Index Cond line and contrast it with a Filter line so learners can distinguish index-satisfied conditions from post-fetch filtering.",
+          "expected_output": "Index Scan using orders_pkey on orders  (cost=0.29..8.31 rows=1 width=45)\n  Index Cond: (id = 4217)"
+        },
+        {
+          "order": 3,
+          "instruction": "Use a medium-selectivity range predicate to produce a Bitmap Heap Scan.",
+          "code": "EXPLAIN\nSELECT * FROM orders WHERE amount BETWEEN 100 AND 250;",
+          "explanation": "This predicate matches enough rows that a plain index scan's random I/O gets costly, but few enough that a full scan is wasteful. The planner builds a bitmap of matching heap pages, then reads them in physical order. Name both the Bitmap Index Scan and the Bitmap Heap Scan nodes.",
+          "expected_output": "Bitmap Heap Scan on orders  (cost=45.12..612.40 rows=1200 width=45)\n  Recheck Cond: ((amount >= 100) AND (amount <= 250))\n  ->  Bitmap Index Scan on orders_amount_idx  (cost=0.00..44.82 rows=1200 width=0)\n        Index Cond: ((amount >= 100) AND (amount <= 250))"
+        },
+        {
+          "order": 4,
+          "instruction": "Run EXPLAIN ANALYZE on a low-selectivity predicate where the planner ignores the index and picks a Seq Scan, and compare estimated vs actual rows.",
+          "code": "EXPLAIN ANALYZE\nSELECT * FROM orders WHERE amount > 10;",
+          "explanation": "The predicate matches most of the table, so a Seq Scan wins despite an index on amount. ANALYZE also runs the query, so learners can see actual rows and actual time next to the estimates. Emphasize the estimated-vs-actual comparison as the key diagnostic.",
+          "expected_output": "Seq Scan on orders  (cost=0.00..556.00 rows=9800 width=45) (actual time=0.011..3.842 rows=9803 loops=1)\n  Filter: (amount > 10)\n  Rows Removed by Filter: 197\nPlanning Time: 0.089 ms\nExecution Time: 4.201 ms"
+        }
+      ],
+      "worked_examples": [
+        {
+          "setup": "Same orders table used earlier, roughly 10,000 rows, with a primary key index on id and a B-tree index on amount.",
+          "walkthrough": "We progressively tightened and loosened the predicate: an equality on id produced an Index Scan (one row expected), a mid-range BETWEEN produced a Bitmap Heap Scan (medium selectivity), and a broad amount > 10 produced a Seq Scan even though an index existed. At each step we read the node type, the cost pair, rows, and width, then under ANALYZE compared estimated rows against actual rows.",
+          "takeaway": "The scan type the planner chooses is a direct function of estimated selectivity. An index existing does not mean it will be used; the planner does cost math, and when estimates are wrong, the plan is wrong."
+        }
+      ],
+      "checks": [
+        {
+          "question": "You have an index on the amount column, yet EXPLAIN shows a Seq Scan for WHERE amount > 10. Is this a bug, and what does it tell you about the predicate?",
+          "expected_answer": "It's not a bug. The predicate matches a large fraction of the table, so random heap fetches through the index would cost more than a sequential scan. Low selectivity means a full scan wins.",
+          "instructor_guidance": "Reinforce that this is cost-based, not a failure. Ask the group whether making amount > 10000 (highly selective) would change the plan—it should flip to an Index or Bitmap scan. Tie back to the sequential-vs-index tradeoff from segment one."
+        }
+      ],
+      "activities": [
+        {
+          "type": "QUICK_EXERCISE",
+          "prompt": "Look at this EXPLAIN ANALYZE fragment: 'Index Scan ... (cost=... rows=50 ...) (actual time=... rows=8400 loops=1)'. Where is the problem, and what is the likely root cause?",
+          "expected_response": "The planner estimated 50 rows but 8400 actually came back—a large estimated-vs-actual divergence. The root cause is stale or insufficient statistics, which will lead the planner toward a poor plan choice for this and dependent nodes.",
+          "facilitation_notes": "Have learners point at the two rows= numbers specifically. Steer them to identify the divergence itself before speculating on causes. Mention ANALYZE (the maintenance command) refreshes statistics as the fix, but keep it brief—deeper tuning belongs to the next segment."
+        }
+      ],
+      "reviewer_rationale": "Depth is weighted toward hands-on plan reading to match the 80% advanced, code-heavy audience. The four live steps escalate deliberately—Seq Scan baseline, Index Scan, Bitmap Heap Scan, then the Seq-Scan-despite-index case—so each node type is introduced against a concrete plan rather than in the abstract. The ANALYZE example is reserved for the last step where estimated-vs-actual divergence is the payoff, keeping EXPLAIN vs EXPLAIN ANALYZE crisp. Checks and the activity both target the highest-value skill: recognizing that an available index isn't a used index, and spotting misestimation. Callbacks to sequential-vs-index scan and B-tree mechanics honor already-covered material without re-teaching.",
+      "status": "GENERATED",
+      "version": 1
+    },
+    {
+      "id": "seg_draft_94ed2a661e0e",
+      "outline_id": "seg_outline_436ed884c4d7",
+      "duration_minutes": 22,
+      "content_minutes": 10,
+      "code_minutes": 12,
+      "instructor_narration": "Now let's turn plan-reading into concrete indexing decisions. Everything we've done so far — understanding sequential versus index scans, walking the B-tree, reading EXPLAIN — was building toward this moment: given a real query, what index do I actually create, and how do I prove it was the right call?\n\nLet me start with the single most important word in this segment: selectivity. Selectivity is the fraction of rows a condition keeps. If a column has a million rows and your filter matches ten of them, that's highly selective — great index candidate. If your filter matches half the table, that's low selectivity, and the planner may well decide a sequential scan is cheaper than an index scan plus all those heap fetches. Related to that is cardinality — the number of distinct values in a column. High cardinality columns like email or user_id tend to be selective; low cardinality columns like a boolean flag or a status with three values usually aren't, at least not uniformly. Hold onto that word 'uniformly' — it's going to matter when we get to partial indexes.\n\nSo the mental model I want you to carry: an index earns its keep when it lets Postgres touch dramatically fewer rows than the table has. That's the read benefit. But remember from our first segment — every index is write amplification. Every INSERT, UPDATE, and DELETE has to maintain that index. So indexing is always a read-versus-write trade, and our job is to make that trade deliberately, not accidentally.\n\nLet's make this real with a query pattern you will see constantly: filter on one column, sort by another. We have an orders table, and we want the recent orders for a given status. [CODE_STEP] Look at that plan — a Seq Scan, and a Sort node on top. Postgres read the whole table and then sorted it in memory. On a big table that's exactly the cost we're trying to avoid.\n\nFirst instinct: index the filter column. [CODE_STEP] Better — we get an Index Scan on status now, but notice the Sort node is still sitting there. We narrowed the rows but Postgres still has to order them by created_at. We solved half the problem.\n\nThis is where composite ordering strategy comes in, and it ties directly back to the leftmost-prefix rule we covered in the B-tree segment. If I build an index on (status, created_at), the index is already sorted by status first, then by created_at within each status. That means Postgres can seek to the status we want AND read the rows back in created_at order — no separate sort. [CODE_STEP] There it is — the Sort node is gone. The equality column goes first, the range-or-sort column goes second. That's the rule of thumb: equality columns lead, range and ordering columns follow.\n\n[CHECKPOINT]\n\nNow, can we do even better? Look at what the query actually returns. If we're selecting a couple of columns, Postgres still has to visit the heap to fetch them, because the index only holds status and created_at. That's where covering indexes come in. Using INCLUDE, we can carry extra columns in the leaf nodes of the index without making them part of the search key. [CODE_STEP] Now watch — the plan says Index Only Scan. Postgres answered the entire query from the index and never touched the table heap. That's the fastest read path we have. The caveat: INCLUDE columns add width to every leaf page, so don't stuff your whole row in there — include only what that hot query needs.\n\nLet me address the skew case, because it's incredibly common. Suppose 95% of your orders are status 'completed' and you almost always query for 'pending'. Indexing all statuses wastes space and write cost on the 95% you never filter for. A partial index solves this — you index only the rows matching a WHERE clause. [CODE_STEP] That index is tiny, it's cheap to maintain, and the planner uses it whenever your query's predicate matches the partial index's condition. Small, targeted, and it barely taxes writes.\n\nWhich brings us to the discipline half of this segment: over-indexing. Every index you add speeds some reads and slows every write. On a write-heavy table, a fifth or sixth index can quietly become your bottleneck — INSERT latency climbs, autovacuum works harder, and disk usage balloons. So before adding an index, ask three questions: Is there a real query that needs it? Is the filter selective enough to help? And can the write path afford it? If you can't answer all three, don't add it.\n\n[ACTIVITY]\n\nLet's consolidate the decision framework and where to go next.",
+      "live_code_steps": [
+        {
+          "order": 1,
+          "instruction": "Run the baseline query with no supporting index and read the plan.",
+          "code": "EXPLAIN ANALYZE\nSELECT id, customer_id, total\nFROM orders\nWHERE status = 'pending'\nORDER BY created_at DESC\nLIMIT 20;",
+          "explanation": "Establishes the pain: without an index Postgres scans the whole table and adds a Sort node. Point at the Seq Scan and the Sort so learners connect plan nodes to cost.",
+          "expected_output": "Seq Scan on orders  (rows filtered) -> Sort (created_at DESC) -> Limit; actual time dominated by the scan and sort."
+        },
+        {
+          "order": 2,
+          "instruction": "Add a single-column index on the filter column and re-run.",
+          "code": "CREATE INDEX idx_orders_status ON orders (status);\n\nEXPLAIN ANALYZE\nSELECT id, customer_id, total\nFROM orders\nWHERE status = 'pending'\nORDER BY created_at DESC\nLIMIT 20;",
+          "explanation": "Shows partial improvement: an Index Scan (or Bitmap) narrows rows, but the Sort node remains because the index gives no ordering by created_at.",
+          "expected_output": "Index Scan / Bitmap Heap Scan on idx_orders_status -> Sort still present."
+        },
+        {
+          "order": 3,
+          "instruction": "Replace with a composite index ordered for equality-then-sort and re-run.",
+          "code": "DROP INDEX idx_orders_status;\nCREATE INDEX idx_orders_status_created ON orders (status, created_at DESC);\n\nEXPLAIN ANALYZE\nSELECT id, customer_id, total\nFROM orders\nWHERE status = 'pending'\nORDER BY created_at DESC\nLIMIT 20;",
+          "explanation": "Demonstrates the leftmost-prefix payoff: equality column first, ordering column second. The Sort node disappears because the index already returns rows in order.",
+          "expected_output": "Index Scan using idx_orders_status_created; no Sort node; lower total cost."
+        },
+        {
+          "order": 4,
+          "instruction": "Add a covering index with INCLUDE to enable an Index Only Scan.",
+          "code": "DROP INDEX idx_orders_status_created;\nCREATE INDEX idx_orders_covering\n  ON orders (status, created_at DESC)\n  INCLUDE (id, customer_id, total);\n\nEXPLAIN ANALYZE\nSELECT id, customer_id, total\nFROM orders\nWHERE status = 'pending'\nORDER BY created_at DESC\nLIMIT 20;",
+          "explanation": "The returned columns now live in the index leaves, so Postgres answers from the index alone. Highlight the 'Index Only Scan' node and the disappearance of heap fetches (Heap Fetches: 0 after vacuum).",
+          "expected_output": "Index Only Scan using idx_orders_covering; Heap Fetches near zero."
+        },
+        {
+          "order": 5,
+          "instruction": "Create a partial index for a skewed, rarely-matched status value.",
+          "code": "CREATE INDEX idx_orders_pending_partial\n  ON orders (created_at DESC)\n  WHERE status = 'pending';\n\nEXPLAIN ANALYZE\nSELECT id, customer_id, total\nFROM orders\nWHERE status = 'pending'\nORDER BY created_at DESC\nLIMIT 20;",
+          "explanation": "Shows a tiny, write-cheap index that only covers the rows we query. Note the planner uses it when the query predicate matches the partial WHERE clause, and compare its size with \\di+ to make the storage savings concrete.",
+          "expected_output": "Index Scan using idx_orders_pending_partial; index size dramatically smaller than a full index."
+        }
+      ],
+      "worked_examples": [
+        {
+          "setup": "A query filtering on status and sorting by created_at DESC with a LIMIT, run against a large orders table.",
+          "walkthrough": "Iterate through four index states — none, single-column, composite (status, created_at DESC), and covering with INCLUDE — reading the EXPLAIN plan at each step to observe the Sort node vanishing and the scan progressing from Seq Scan to Index Only Scan.",
+          "takeaway": "The best index mirrors the query shape: equality columns lead, ordering columns follow, and INCLUDE eliminates heap trips when a specific hot query dominates."
+        }
+      ],
+      "checks": [
+        {
+          "question": "For a query with WHERE region = 'EU' AND price > 100 ORDER BY price, in what order should the composite index columns go, and why?",
+          "expected_answer": "region first (equality), then price (range/ordering). The leftmost-prefix rule lets Postgres seek on the equality column and then read the range in sorted order, avoiding a separate Sort.",
+          "instructor_guidance": "Listen for the equality-before-range principle. If someone puts price first, show that region can no longer be used as an efficient seek and the equality benefit is lost. Reinforce the callback to the leftmost-prefix rule from segment 2."
+        }
+      ],
+      "activities": [
+        {
+          "type": "DISCUSSION",
+          "prompt": "You maintain an events table that ingests thousands of rows per second and already has four indexes. A reporting team asks for a fifth index to speed up a dashboard query they run twice a day. Do you add it? Argue both sides.",
+          "expected_response": "A thoughtful answer weighs the twice-daily read benefit against per-write maintenance cost on a high-ingest table. Alternatives include a partial or covering index scoped tightly, running the report on a replica, or a materialized view — rather than a full new index on the hot write path.",
+          "facilitation_notes": "Push students to quantify: how selective is the dashboard filter, and what's the write volume? Steer them toward the three-question test (real query, selective enough, writes can afford it). Reward answers that propose scoping the index or moving reads off the primary."
+        },
+        {
+          "type": "QUICK_EXERCISE",
+          "prompt": "Given SELECT id, total FROM orders WHERE customer_id = $1 AND status = 'shipped' ORDER BY created_at DESC, design the single best index and predict the plan node, then verify with EXPLAIN ANALYZE.",
+          "expected_response": "An index on (customer_id, status, created_at DESC) INCLUDE (id, total), producing an Index Only Scan with no Sort node.",
+          "facilitation_notes": "Give 3-4 minutes. Common miss: forgetting INCLUDE and still getting an Index Scan with heap fetches. Have one student share their CREATE INDEX and run it live to confirm the predicted node."
+        }
+      ],
+      "reviewer_rationale": "This is the applied capstone segment for an 80%-advanced audience, so it is deliberately code-heavy (12 code minutes) and structured as a single evolving query iterated across five index states, letting learners see cause-and-effect in the plan rather than memorizing rules. Each new concept (selectivity, composite ordering, covering, partial, over-indexing) is introduced only when a code step motivates it, and every prior concept (leftmost-prefix, plan nodes, read/write tradeoff) is invoked as a callback rather than re-taught, per the assumed-concepts constraint. The DISCUSSION activity targets the over-indexing tradeoff directly with a realistic write-heavy scenario, and the QUICK_EXERCISE forces independent index design plus verification, satisfying the objective of justifying choices via selectivity and plan feedback. The checkpoint after the composite step catches the most common ordering mistake before moving to covering indexes.",
+      "status": "GENERATED",
+      "version": 1
+    }
+  ],
+  "latest_evaluation": {
+    "id": "eval_98553d36a048",
+    "project_id": "project_05dd9345554b",
+    "structural": {
+      "all_agenda_items_present": true,
+      "timing_sums_correctly": true,
+      "content_code_ratio_within_tolerance": true,
+      "prior_topics_not_reteaught": true,
+      "segment_ids_stable": true,
+      "failures": []
+    },
+    "model_judge": null,
+    "golden_comparison": {
+      "comparison_method": "Blind pairwise preference against human-authored instructor scripts.",
+      "required_dataset": "A small set of real Scaler class scripts matched by topic and level.",
+      "blind_review_protocol": "Instructors compare anonymized generated and human scripts, then choose which is more teach-ready and whether either needs major edits.",
+      "notes": "Documented as production eval path; not run in this take-home without golden scripts."
+    },
+    "passed_gate": true,
+    "recommendations": [],
+    "created_at": "2026-07-07T10:23:44.269650Z"
+  },
+  "review_events": [],
+  "sign_off": null,
+  "review_status": "UNDER_REVIEW",
+  "generation_status": "READY_FOR_REVIEW",
+  "generation_message": "Generation complete and eval gate passed.",
+  "generation_progress": 100,
+  "generation_error": null,
+  "created_at": "2026-07-07T10:19:28.019805Z",
+  "updated_at": "2026-07-07T10:23:44.269760Z"
+}

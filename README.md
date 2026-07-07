@@ -82,6 +82,15 @@ Run one case:
 uv run python scripts/run_evals.py --structural-only --case postgres_beginner
 ```
 
+Committed sample outputs and a passing full judge eval report are available under:
+
+```text
+sample_outputs/projects/
+sample_outputs/scripts/
+sample_outputs/final_eval/report.md
+sample_outputs/final_eval/results.json
+```
+
 Re-evaluate saved project JSON without regenerating:
 
 ```bash
