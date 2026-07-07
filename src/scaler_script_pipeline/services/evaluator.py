@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import logging
+
 from scaler_script_pipeline.core.config import Settings
 from scaler_script_pipeline.core.models import (
     EvaluationReport,
@@ -10,6 +12,8 @@ from scaler_script_pipeline.core.models import (
 )
 from scaler_script_pipeline.services.claude import ClaudeClient
 from scaler_script_pipeline.services.prompts import judge_system_prompt, judge_user_prompt
+
+logger = logging.getLogger(__name__)
 
 
 class EvaluationRunner:
@@ -87,11 +91,29 @@ class EvaluationRunner:
 
     def run_model_judge(self, project: ScriptProject) -> ModelJudgeResult | None:
         if not self.settings.model_judge_enabled:
+            logger.info("eval.model_judge.skipped project_id=%s", project.id)
             return None
-        return self.claude.generate_model(judge_system_prompt(), judge_user_prompt(project), ModelJudgeResult)
+        logger.info("eval.model_judge.start project_id=%s", project.id)
+        result = self.claude.generate_model(judge_system_prompt(), judge_user_prompt(project), ModelJudgeResult)
+        logger.info(
+            "eval.model_judge.done project_id=%s avg_score=%.2f coverage=%.1f level_fit=%.1f pedagogy=%.1f",
+            project.id,
+            result.average_score,
+            result.coverage_score,
+            result.level_fit_score,
+            result.pedagogy_score,
+        )
+        return result
 
     def run_all(self, project: ScriptProject) -> EvaluationReport:
+        logger.info("eval.start project_id=%s segments=%s", project.id, len(project.segments))
         structural = self.run_structural_checks(project)
+        logger.info(
+            "eval.structural.done project_id=%s failures=%s details=%s",
+            project.id,
+            len(structural.failures),
+            " | ".join(structural.failures) if structural.failures else "none",
+        )
         model_judge = self.run_model_judge(project)
         model_ok = model_judge is None or model_judge.average_score >= 3.75
         passed = not structural.failures and model_ok
@@ -99,7 +121,7 @@ class EvaluationRunner:
         if model_judge and not model_ok:
             recommendations.append("Model judge average score is below the 3.75 go/no-go threshold.")
 
-        return EvaluationReport(
+        report = EvaluationReport(
             project_id=project.id,
             structural=structural,
             model_judge=model_judge,
@@ -115,4 +137,10 @@ class EvaluationRunner:
             passed_gate=passed,
             recommendations=recommendations,
         )
-
+        logger.info(
+            "eval.done project_id=%s passed=%s recommendations=%s",
+            project.id,
+            report.passed_gate,
+            len(report.recommendations),
+        )
+        return report

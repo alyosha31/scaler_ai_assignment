@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import re
 
 from fastapi import HTTPException
@@ -35,6 +36,8 @@ from scaler_script_pipeline.services.prompts import (
 from scaler_script_pipeline.services.validator import BriefValidator
 from scaler_script_pipeline.storage.repository import ProjectRepository
 
+logger = logging.getLogger(__name__)
+
 
 class ScriptPipeline:
     def __init__(
@@ -57,6 +60,17 @@ class ScriptPipeline:
             generation_progress=0,
         )
         self.repository.create(project)
+        logger.info(
+            "project.generate.start project_id=%s topic=%r agenda_items=%s duration=%s ratio=%s/%s audience=%s/%s",
+            project.id,
+            brief.topic,
+            len(brief.agenda),
+            brief.duration_minutes,
+            brief.content_percentage,
+            brief.code_percentage,
+            brief.beginner_percentage,
+            brief.advanced_percentage,
+        )
         try:
             self._set_generation_state(
                 project,
@@ -66,6 +80,7 @@ class ScriptPipeline:
             )
             self._generate_project_in_place(project)
         except Exception as exc:
+            logger.exception("project.generate.failed project_id=%s", project.id)
             project.generation_status = GenerationStatus.FAILED
             project.generation_message = "Generation failed."
             project.generation_error = str(exc)
@@ -78,6 +93,13 @@ class ScriptPipeline:
         validation = self.validator.validate(brief)
         project.validation = validation
         self.repository.save(project)
+        logger.info(
+            "project.validation.done project_id=%s valid=%s warnings=%s errors=%s",
+            project.id,
+            validation.is_valid,
+            len(validation.warnings),
+            len(validation.errors),
+        )
 
         if not validation.is_valid:
             project.generation_status = GenerationStatus.FAILED
@@ -85,6 +107,7 @@ class ScriptPipeline:
             project.generation_error = "; ".join(error.message for error in validation.errors)
             project.generation_progress = 100
             self.repository.save(project)
+            logger.warning("project.validation.blocked project_id=%s error=%s", project.id, project.generation_error)
             return
 
         self._set_generation_state(
@@ -102,6 +125,14 @@ class ScriptPipeline:
         outline.warnings = validation.warnings + outline.warnings
         project.outline = outline
         self.repository.save(project)
+        logger.info(
+            "project.outline.done project_id=%s outline_id=%s segments=%s target_content=%s target_code=%s",
+            project.id,
+            outline.id,
+            len(outline.segments),
+            outline.target_content_minutes,
+            outline.target_code_minutes,
+        )
 
         self._set_generation_state(
             project,
@@ -112,6 +143,17 @@ class ScriptPipeline:
         segments: list[SegmentDraft] = []
         total_segments = len(outline.segments)
         for index, segment_outline in enumerate(outline.segments, start=1):
+            logger.info(
+                "segment.generate.start project_id=%s outline_id=%s index=%s/%s title=%r minutes=%s content=%s code=%s",
+                project.id,
+                segment_outline.id,
+                index,
+                total_segments,
+                segment_outline.title,
+                segment_outline.duration_minutes,
+                segment_outline.content_minutes,
+                segment_outline.code_minutes,
+            )
             draft = self.claude.generate_model(
                 segment_system_prompt(),
                 segment_user_prompt(brief, outline, segment_outline),
@@ -123,6 +165,12 @@ class ScriptPipeline:
             draft.code_minutes = segment_outline.code_minutes
             failures = self._segment_local_failures(draft)
             if failures:
+                logger.warning(
+                    "segment.local_guardrail.failed project_id=%s outline_id=%s failures=%s",
+                    project.id,
+                    segment_outline.id,
+                    "; ".join(failures),
+                )
                 repair_prompt = (
                     "Repair this generated segment. Fix these guardrail failures: "
                     + "; ".join(failures)
@@ -138,11 +186,23 @@ class ScriptPipeline:
                 repaired.code_minutes = segment_outline.code_minutes
                 repaired.status = DraftStatus.REGENERATED
                 draft = repaired
+                logger.info("segment.local_guardrail.repaired project_id=%s outline_id=%s", project.id, segment_outline.id)
             segments.append(draft)
             project.segments = segments
             project.generation_progress = 35 + int((index / max(total_segments, 1)) * 40)
             project.generation_message = f"Generated segment {index}/{total_segments}."
             self.repository.save(project)
+            logger.info(
+                "segment.generate.done project_id=%s draft_id=%s index=%s/%s version=%s checks=%s activities=%s code_steps=%s",
+                project.id,
+                draft.id,
+                index,
+                total_segments,
+                draft.version,
+                len(draft.checks),
+                len(draft.activities),
+                len(draft.live_code_steps),
+            )
 
         self._set_generation_state(
             project,
@@ -151,6 +211,13 @@ class ScriptPipeline:
             85,
         )
         project.latest_evaluation = self.evaluator.run_all(project)
+        logger.info(
+            "project.eval.done project_id=%s passed=%s failures=%s recommendations=%s",
+            project.id,
+            project.latest_evaluation.passed_gate,
+            len(project.latest_evaluation.structural.failures),
+            len(project.latest_evaluation.recommendations),
+        )
         if not project.latest_evaluation.passed_gate:
             self._set_generation_state(
                 project,
@@ -166,6 +233,13 @@ class ScriptPipeline:
                 95,
             )
             project.latest_evaluation = self.evaluator.run_all(project)
+            logger.info(
+                "project.eval.rerun_done project_id=%s passed=%s failures=%s recommendations=%s",
+                project.id,
+                project.latest_evaluation.passed_gate,
+                len(project.latest_evaluation.structural.failures),
+                len(project.latest_evaluation.recommendations),
+            )
 
         project.review_status = ReviewStatus.UNDER_REVIEW
         if project.latest_evaluation.passed_gate:
@@ -176,6 +250,13 @@ class ScriptPipeline:
             project.generation_message = "Generation complete, but eval found issues."
         project.generation_progress = 100
         self.repository.save(project)
+        logger.info(
+            "project.generate.done project_id=%s status=%s review_status=%s passed_gate=%s",
+            project.id,
+            project.generation_status.value,
+            project.review_status.value,
+            project.latest_evaluation.passed_gate if project.latest_evaluation else None,
+        )
 
     def _repair_once(self, project: ScriptProject) -> None:
         if project.outline is None or project.latest_evaluation is None:
@@ -186,12 +267,27 @@ class ScriptPipeline:
             RepairPlan,
         )
         repairable = [issue for issue in plan.repairs if issue.scope == "segment" and issue.segment_id]
+        logger.info(
+            "project.repair.plan project_id=%s segment_repairs=%s global_issues=%s rationale=%r",
+            project.id,
+            len(repairable),
+            len(plan.global_issues),
+            plan.rationale[:300],
+        )
         for issue in repairable[:3]:
             try:
                 draft = self._find_segment_draft(project, issue.segment_id or "")
                 outline = self._find_segment_outline(project, draft.outline_id)
             except HTTPException:
+                logger.warning("project.repair.segment_missing project_id=%s segment_id=%s", project.id, issue.segment_id)
                 continue
+            logger.info(
+                "project.repair.segment.start project_id=%s segment_id=%s severity=%s issue=%r",
+                project.id,
+                draft.id,
+                issue.severity,
+                issue.issue,
+            )
             regenerated = self.claude.generate_model(
                 segment_system_prompt(),
                 regeneration_user_prompt(
@@ -223,6 +319,12 @@ class ScriptPipeline:
                     version_after=regenerated.version,
                 )
             )
+            logger.info(
+                "project.repair.segment.done project_id=%s segment_id=%s version=%s",
+                project.id,
+                regenerated.id,
+                regenerated.version,
+            )
         if plan.global_issues:
             project.review_events.append(
                 ReviewEvent(
@@ -250,6 +352,7 @@ class ScriptPipeline:
     ) -> ScriptProject:
         project = self.get_project(project_id)
         draft = self._find_segment_draft(project, segment_id)
+        logger.info("segment.edit project_id=%s segment_id=%s version_before=%s", project_id, draft.id, draft.version)
         before = draft.instructor_narration
         version_before = draft.version
         draft.instructor_narration = request.instructor_narration
@@ -278,6 +381,13 @@ class ScriptPipeline:
             raise HTTPException(status_code=400, detail="Project has no outline")
         draft = self._find_segment_draft(project, segment_id)
         outline = self._find_segment_outline(project, segment_id)
+        logger.info(
+            "segment.regenerate.start project_id=%s segment_id=%s version_before=%s instruction_chars=%s",
+            project_id,
+            draft.id,
+            draft.version,
+            len(request.instruction),
+        )
 
         regen = RegenerationRequest(
             project_id=project.id,
@@ -326,15 +436,37 @@ class ScriptPipeline:
             )
         )
         project.latest_evaluation = self.evaluator.run_all(project)
-        return self.repository.save(project)
+        saved = self.repository.save(project)
+        logger.info(
+            "segment.regenerate.done project_id=%s segment_id=%s version_after=%s passed_gate=%s",
+            project_id,
+            regenerated.id,
+            regenerated.version,
+            project.latest_evaluation.passed_gate if project.latest_evaluation else None,
+        )
+        return saved
 
     def evaluate_project(self, project_id: str) -> ScriptProject:
         project = self.get_project(project_id)
+        logger.info("project.evaluate.start project_id=%s", project_id)
         project.latest_evaluation = self.evaluator.run_all(project)
-        return self.repository.save(project)
+        saved = self.repository.save(project)
+        logger.info(
+            "project.evaluate.done project_id=%s passed_gate=%s failures=%s",
+            project_id,
+            project.latest_evaluation.passed_gate,
+            len(project.latest_evaluation.structural.failures),
+        )
+        return saved
 
     def sign_off(self, project_id: str, request: SignOffRequest) -> ScriptProject:
         project = self.get_project(project_id)
+        logger.info(
+            "project.sign_off project_id=%s approved=%s instructor=%r",
+            project_id,
+            request.approved,
+            request.instructor_name,
+        )
         sign_off = SignOff(
             project_id=project.id,
             instructor_name=request.instructor_name,

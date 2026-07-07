@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import json
+import logging
+import time
 from typing import TypeVar
 
 from anthropic import Anthropic, AnthropicError
@@ -10,6 +12,7 @@ from scaler_script_pipeline.core.config import Settings
 from scaler_script_pipeline.core.models import ClaudeError
 
 T = TypeVar("T", bound=BaseModel)
+logger = logging.getLogger(__name__)
 
 
 class ClaudeClient:
@@ -23,6 +26,13 @@ class ClaudeClient:
                 "ANTHROPIC_API_KEY is missing. Copy .env.example to .env and set the key."
             )
 
+        started = time.perf_counter()
+        logger.info(
+            "claude.request.start model=%s response_model=%s prompt_chars=%s",
+            self.settings.anthropic_model,
+            model_type.__name__,
+            len(system) + len(user),
+        )
         try:
             response = self.client.messages.create(
                 model=self.settings.anthropic_model,
@@ -39,13 +49,36 @@ class ClaudeClient:
                 ],
             )
         except AnthropicError as exc:
+            elapsed_ms = int((time.perf_counter() - started) * 1000)
+            logger.exception(
+                "claude.request.error model=%s response_model=%s elapsed_ms=%s",
+                self.settings.anthropic_model,
+                model_type.__name__,
+                elapsed_ms,
+            )
             raise ClaudeError(f"Claude API request failed: {exc}") from exc
 
         text = "".join(block.text for block in response.content if getattr(block, "type", "") == "text")
         try:
-            return model_type.model_validate_json(_extract_json(text))
+            parsed = model_type.model_validate_json(_extract_json(text))
         except (ValidationError, ValueError) as exc:
+            elapsed_ms = int((time.perf_counter() - started) * 1000)
+            logger.exception(
+                "claude.response.invalid response_model=%s elapsed_ms=%s response_chars=%s",
+                model_type.__name__,
+                elapsed_ms,
+                len(text),
+            )
             raise ClaudeError(f"Claude returned invalid {model_type.__name__} JSON: {exc}") from exc
+        elapsed_ms = int((time.perf_counter() - started) * 1000)
+        logger.info(
+            "claude.request.end model=%s response_model=%s elapsed_ms=%s response_chars=%s",
+            self.settings.anthropic_model,
+            model_type.__name__,
+            elapsed_ms,
+            len(text),
+        )
+        return parsed
 
 
 def _extract_json(text: str) -> str:
