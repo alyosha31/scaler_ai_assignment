@@ -24,14 +24,29 @@ import {
 } from './api'
 import type { InstructorBrief, ScriptProject, SegmentDraft, SegmentOutline } from './types'
 
-const initialBrief: InstructorBrief = {
+type BriefFormState = Omit<
+  InstructorBrief,
+  | 'beginner_percentage'
+  | 'advanced_percentage'
+  | 'duration_minutes'
+  | 'content_percentage'
+  | 'code_percentage'
+> & {
+  beginner_percentage: number | null
+  advanced_percentage: number | null
+  duration_minutes: number | null
+  content_percentage: number | null
+  code_percentage: number | null
+}
+
+const initialBrief: BriefFormState = {
   topic: '',
   agenda: [],
-  beginner_percentage: 70,
-  advanced_percentage: 30,
-  duration_minutes: 90,
-  content_percentage: 60,
-  code_percentage: 40,
+  beginner_percentage: null,
+  advanced_percentage: null,
+  duration_minutes: null,
+  content_percentage: null,
+  code_percentage: null,
   topics_already_covered: [],
 }
 
@@ -43,9 +58,16 @@ const exampleAgenda = [
   'Choosing indexes for common queries',
 ].join('\n')
 const exampleCoveredTopics = ['basic SQL', 'primary keys'].join('\n')
+const exampleConstraints = {
+  beginner_percentage: '70',
+  advanced_percentage: '30',
+  duration_minutes: '90',
+  content_percentage: '60',
+  code_percentage: '40',
+}
 
 function App() {
-  const [brief, setBrief] = useState<InstructorBrief>(initialBrief)
+  const [brief, setBrief] = useState<BriefFormState>(initialBrief)
   const [agendaText, setAgendaText] = useState(initialBrief.agenda.join('\n'))
   const [coveredTopicsText, setCoveredTopicsText] = useState(initialBrief.topics_already_covered.join('\n'))
   const [project, setProject] = useState<ScriptProject | null>(null)
@@ -70,6 +92,7 @@ function App() {
   ) ?? null
 
   async function submitBrief() {
+    if (!isBriefReady(brief)) return
     setSubmitting(true)
     setError(null)
     try {
@@ -196,6 +219,18 @@ function App() {
   )
 }
 
+function isBriefReady(brief: BriefFormState): brief is InstructorBrief {
+  return (
+    brief.topic.trim().length >= 3 &&
+    brief.agenda.length > 0 &&
+    brief.beginner_percentage !== null &&
+    brief.advanced_percentage !== null &&
+    brief.duration_minutes !== null &&
+    brief.content_percentage !== null &&
+    brief.code_percentage !== null
+  )
+}
+
 function ProjectBrowser({
   projects,
   activeProjectId,
@@ -272,8 +307,8 @@ function BriefForm({
   onOpenProject,
   onSubmit,
 }: {
-  brief: InstructorBrief
-  setBrief: (brief: InstructorBrief) => void
+  brief: BriefFormState
+  setBrief: (brief: BriefFormState) => void
   agendaText: string
   setAgendaText: (text: string) => void
   coveredTopicsText: string
@@ -334,17 +369,17 @@ function BriefForm({
           <h2>Constraints</h2>
         </div>
         <div className="two-col">
-          <NumberInput label="Beginner %" value={brief.beginner_percentage} onChange={(value) => setBrief({ ...brief, beginner_percentage: value })} />
-          <NumberInput label="Advanced %" value={brief.advanced_percentage} onChange={(value) => setBrief({ ...brief, advanced_percentage: value })} />
-          <NumberInput label="Duration" value={brief.duration_minutes} min={5} max={240} onChange={(value) => setBrief({ ...brief, duration_minutes: value })} />
-          <NumberInput label="Content %" value={brief.content_percentage} onChange={(value) => setBrief({ ...brief, content_percentage: value })} />
-          <NumberInput label="Code %" value={brief.code_percentage} onChange={(value) => setBrief({ ...brief, code_percentage: value })} />
+          <NumberInput label="Beginner %" value={brief.beginner_percentage} placeholder={exampleConstraints.beginner_percentage} onChange={(value) => setBrief({ ...brief, beginner_percentage: value })} />
+          <NumberInput label="Advanced %" value={brief.advanced_percentage} placeholder={exampleConstraints.advanced_percentage} onChange={(value) => setBrief({ ...brief, advanced_percentage: value })} />
+          <NumberInput label="Duration (mins)" value={brief.duration_minutes} placeholder={exampleConstraints.duration_minutes} min={5} max={240} onChange={(value) => setBrief({ ...brief, duration_minutes: value })} />
+          <NumberInput label="Content %" value={brief.content_percentage} placeholder={exampleConstraints.content_percentage} onChange={(value) => setBrief({ ...brief, content_percentage: value })} />
+          <NumberInput label="Code %" value={brief.code_percentage} placeholder={exampleConstraints.code_percentage} onChange={(value) => setBrief({ ...brief, code_percentage: value })} />
         </div>
         <button
           className="button primary wide"
           type="button"
           onClick={onSubmit}
-          disabled={submitting || brief.topic.trim().length < 3 || brief.agenda.length === 0}
+          disabled={submitting || !isBriefReady(brief)}
         >
           {submitting ? <Loader2 className="spin" size={16} /> : <Send size={16} />}
           {submitting ? 'Generating and evaluating...' : 'Generate script'}
@@ -371,15 +406,17 @@ function parseMultilineList(value: string) {
 function NumberInput({
   label,
   value,
+  placeholder,
   min,
   max,
   onChange,
 }: {
   label: string
-  value: number
+  value: number | null
+  placeholder: string
   min?: number
   max?: number
-  onChange: (value: number) => void
+  onChange: (value: number | null) => void
 }) {
   return (
     <label>
@@ -388,8 +425,9 @@ function NumberInput({
         type="number"
         min={min}
         max={max}
-        value={value}
-        onChange={(event) => onChange(Number(event.target.value))}
+        placeholder={placeholder}
+        value={value ?? ''}
+        onChange={(event) => onChange(event.target.value === '' ? null : Number(event.target.value))}
       />
     </label>
   )
