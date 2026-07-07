@@ -400,6 +400,7 @@ The deterministic guardrails check:
 - checkpoint/activity presence
 - live-code presence when code is required
 - reviewer rationale coverage
+- content density, using narration words/content-minute, live-code steps/code-minute, and concepts/minute
 
 The LLM judge checks:
 

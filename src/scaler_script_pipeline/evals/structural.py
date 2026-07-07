@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from scaler_script_pipeline.core.models import ScriptProject
 from scaler_script_pipeline.evals.types import EvalExpectations, GuardrailResult
+from scaler_script_pipeline.services.density import project_density_failures, project_density_summary
 
 
 def run_guardrails(project: ScriptProject, expectations: EvalExpectations) -> list[GuardrailResult]:
@@ -127,6 +128,16 @@ def run_guardrails(project: ScriptProject, expectations: EvalExpectations) -> li
         )
     )
 
+    density_failures = project_density_failures(project)
+    checks.append(
+        GuardrailResult(
+            name="content_density",
+            passed=not density_failures,
+            detail=project_density_summary(project) if not density_failures else " | ".join(density_failures),
+            red_line="R10_UNTEACHABLE_SCRIPT" if density_failures else None,
+        )
+    )
+
     return checks
 
 
@@ -140,4 +151,3 @@ def _project_text(project: ScriptProject) -> str:
         parts.append(project.outline.model_dump_json())
     parts.extend(segment.model_dump_json() for segment in project.segments)
     return " ".join(parts).lower()
-

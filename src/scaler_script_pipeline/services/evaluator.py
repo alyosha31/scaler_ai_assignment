@@ -11,6 +11,7 @@ from scaler_script_pipeline.core.models import (
     StructuralEvalResult,
 )
 from scaler_script_pipeline.services.claude import ClaudeClient
+from scaler_script_pipeline.services.density import project_density_failures
 from scaler_script_pipeline.services.prompts import judge_system_prompt, judge_user_prompt
 
 logger = logging.getLogger(__name__)
@@ -79,6 +80,8 @@ class EvaluationRunner:
         )
         if not stable_ids:
             failures.append("One or more segment drafts do not map to stable outline IDs.")
+
+        failures.extend(project_density_failures(project))
 
         return StructuralEvalResult(
             all_agenda_items_present=all_agenda,
