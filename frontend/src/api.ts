@@ -81,3 +81,7 @@ export function listTraces(projectId: string, limit = 12) {
 export function traceUrl(traceId: string) {
   return `${API_BASE}/traces/${traceId}`
 }
+
+export function traceStreamUrl(projectId: string) {
+  return `${API_BASE}/traces/stream?project_id=${encodeURIComponent(projectId)}`
+}

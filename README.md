@@ -495,7 +495,26 @@ Inspect one trace:
 curl -s "http://127.0.0.1:8000/traces/trace_123" | python -m json.tool
 ```
 
+Watch traces live as they complete:
+
+```bash
+curl -N "http://127.0.0.1:8000/traces/stream"
+```
+
+Watch traces live for one project:
+
+```bash
+curl -N "http://127.0.0.1:8000/traces/stream?project_id=project_123"
+```
+
 This gives traceability across the generation pipeline: brief input, outline prompt/output, per-segment prompt/output, repair prompts, runtime judge calls, and offline eval judges.
+
+Logs and traces serve different purposes:
+
+- Logs are operational breadcrumbs: request started, segment generated, eval failed, elapsed time.
+- Traces are model-call evidence: exact prompt input, requested schema, raw model output, parsed model object, metadata, timing, and error if any.
+
+In practice, logs answer "what happened?" while traces answer "why did this model call produce that artifact?"
 
 ## Data And Secrets
 

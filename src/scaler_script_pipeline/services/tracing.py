@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import queue
 import time
 from datetime import datetime, timezone
 from pathlib import Path
@@ -18,6 +19,7 @@ class TraceStore:
         self.enabled = enabled
         if self.enabled:
             self.trace_dir.mkdir(parents=True, exist_ok=True)
+        self._subscribers: list[queue.Queue[dict[str, Any]]] = []
 
     def record_span(
         self,
@@ -48,6 +50,7 @@ class TraceStore:
         }
         path = self.trace_dir / f"{trace['trace_id']}.json"
         path.write_text(json.dumps(trace, indent=2, default=str), encoding="utf-8")
+        self._publish(_summary(trace))
         return trace
 
     def list_traces(self, limit: int = 50, project_id: str | None = None) -> list[dict[str, Any]]:
@@ -70,6 +73,28 @@ class TraceStore:
         if not path.exists():
             return None
         return json.loads(path.read_text(encoding="utf-8"))
+
+    def subscribe(self) -> queue.Queue[dict[str, Any]]:
+        subscriber: queue.Queue[dict[str, Any]] = queue.Queue(maxsize=100)
+        self._subscribers.append(subscriber)
+        return subscriber
+
+    def unsubscribe(self, subscriber: queue.Queue[dict[str, Any]]) -> None:
+        try:
+            self._subscribers.remove(subscriber)
+        except ValueError:
+            pass
+
+    def _publish(self, summary: dict[str, Any]) -> None:
+        for subscriber in list(self._subscribers):
+            try:
+                subscriber.put_nowait(summary)
+            except queue.Full:
+                try:
+                    subscriber.get_nowait()
+                    subscriber.put_nowait(summary)
+                except queue.Empty:
+                    pass
 
 
 class TraceTimer:

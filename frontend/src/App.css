@@ -130,6 +130,26 @@ p {
   color: #12753a;
 }
 
+.trace-live {
+  border: 1px solid #cfd7e2;
+  border-radius: 999px;
+  color: #687385;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 3px 7px;
+  text-transform: uppercase;
+}
+
+.trace-live.live {
+  border-color: #a6d8b8;
+  color: #12753a;
+}
+
+.trace-live.offline {
+  border-color: #f3b6af;
+  color: #b42318;
+}
+
 .workspace {
   display: grid;
   grid-template-columns: 280px minmax(0, 1fr) 320px;

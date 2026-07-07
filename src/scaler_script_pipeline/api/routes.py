@@ -1,4 +1,8 @@
+import json
+import queue
+
 from fastapi import APIRouter, Depends, HTTPException, Response
+from fastapi.responses import StreamingResponse
 
 from scaler_script_pipeline.api.dependencies import get_pipeline, get_trace_store
 from scaler_script_pipeline.core.models import (
@@ -107,6 +111,35 @@ def list_traces(
     trace_store: TraceStore = Depends(get_trace_store),
 ) -> list[dict]:
     return trace_store.list_traces(limit=limit, project_id=project_id)
+
+
+@router.get("/traces/stream")
+def stream_traces(
+    project_id: str | None = None,
+    trace_store: TraceStore = Depends(get_trace_store),
+) -> StreamingResponse:
+    subscriber = trace_store.subscribe()
+
+    def events():
+        try:
+            yield ": connected\n\n"
+            while True:
+                try:
+                    summary = subscriber.get(timeout=15)
+                except queue.Empty:
+                    yield ": heartbeat\n\n"
+                    continue
+                if project_id and summary.get("project_id") != project_id:
+                    continue
+                yield f"event: trace\ndata: {json.dumps(summary)}\n\n"
+        finally:
+            trace_store.unsubscribe(subscriber)
+
+    return StreamingResponse(
+        events(),
+        media_type="text/event-stream",
+        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
+    )
 
 
 @router.get("/traces/{trace_id}")

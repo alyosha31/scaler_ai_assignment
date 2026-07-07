@@ -22,6 +22,7 @@ import {
   markdownExportUrl,
   regenerateSegment,
   signOffProject,
+  traceStreamUrl,
   traceUrl,
 } from './api'
 import type { TraceSummary } from './api'
@@ -846,6 +847,7 @@ function RecapNextPanel({ project }: { project: ScriptProject }) {
 function TracePanel({ project }: { project: ScriptProject }) {
   const [traces, setTraces] = useState<TraceSummary[]>([])
   const [loading, setLoading] = useState(false)
+  const [liveStatus, setLiveStatus] = useState<'connecting' | 'live' | 'offline'>('connecting')
 
   async function refreshTraces() {
     setLoading(true)
@@ -860,10 +862,23 @@ function TracePanel({ project }: { project: ScriptProject }) {
     void refreshTraces()
   }, [project.id])
 
+  useEffect(() => {
+    const source = new EventSource(traceStreamUrl(project.id))
+    setLiveStatus('connecting')
+    source.onopen = () => setLiveStatus('live')
+    source.onerror = () => setLiveStatus('offline')
+    source.addEventListener('trace', (event) => {
+      const trace = JSON.parse((event as MessageEvent).data) as TraceSummary
+      setTraces((current) => [trace, ...current.filter((item) => item.trace_id !== trace.trace_id)].slice(0, 12))
+    })
+    return () => source.close()
+  }, [project.id])
+
   return (
     <div className="panel">
       <div className="panel-title-row">
         <h2>Traces</h2>
+        <span className={`trace-live ${liveStatus}`}>{liveStatus}</span>
         <button className="icon-button" type="button" onClick={refreshTraces} title="Refresh traces">
           {loading ? <Loader2 className="spin" size={15} /> : <RefreshCw size={15} />}
         </button>
