@@ -173,6 +173,7 @@ function App() {
                 segment={selectedSegment}
                 outline={selectedOutline}
                 onProjectChange={setProject}
+                onSelectSegment={setSelectedSegmentId}
               />
             ) : (
               <OutlineWaiting project={project} />
@@ -445,11 +446,13 @@ function SegmentPanel({
   segment,
   outline,
   onProjectChange,
+  onSelectSegment,
 }: {
   project: ScriptProject
   segment: SegmentDraft
   outline: SegmentOutline
   onProjectChange: (project: ScriptProject) => void
+  onSelectSegment: (segmentId: string) => void
 }) {
   const [editing, setEditing] = useState(false)
   const [draftText, setDraftText] = useState(segment.instructor_narration)
@@ -457,6 +460,12 @@ function SegmentPanel({
   const [regenInstruction, setRegenInstruction] = useState('')
   const [busy, setBusy] = useState(false)
   const isSignedOff = Boolean(project.sign_off)
+  const currentSegmentIndex = project.segments.findIndex((candidate) => candidate.id === segment.id)
+  const previousSegment = currentSegmentIndex > 0 ? project.segments[currentSegmentIndex - 1] : null
+  const nextSegment =
+    currentSegmentIndex >= 0 && currentSegmentIndex < project.segments.length - 1
+      ? project.segments[currentSegmentIndex + 1]
+      : null
 
   useEffect(() => setDraftText(segment.instructor_narration), [segment.id, segment.version])
   useEffect(() => {
@@ -535,6 +544,25 @@ function SegmentPanel({
           <InlineScript segment={segment} />
         )}
       </section>
+
+      <div className="segment-navigation">
+        <button
+          className="button secondary"
+          type="button"
+          disabled={!previousSegment}
+          onClick={() => previousSegment && onSelectSegment(previousSegment.id)}
+        >
+          Previous segment
+        </button>
+        <button
+          className="button secondary"
+          type="button"
+          disabled={!nextSegment}
+          onClick={() => nextSegment && onSelectSegment(nextSegment.id)}
+        >
+          Next segment
+        </button>
+      </div>
 
       <section className="script-block">
         <h3>Regenerate this segment</h3>

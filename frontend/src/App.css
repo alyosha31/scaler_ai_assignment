@@ -332,6 +332,16 @@ textarea {
   gap: 14px;
 }
 
+.segment-navigation {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.segment-navigation .button {
+  min-width: 150px;
+}
+
 .segment-header {
   display: flex;
   justify-content: space-between;
