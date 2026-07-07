@@ -1,124 +1,85 @@
 # Scaler Class Script Authoring Pipeline
 
-Outline-first backend for generating, evaluating, reviewing, regenerating, and signing off instructor class scripts.
+Outline-first application for generating, evaluating, reviewing, partially regenerating, and signing off instructor-ready live class scripts.
 
-## Setup
+The system accepts a structured instructor brief, generates a class outline, drafts one script segment per agenda item, runs deterministic and LLM-based evals, supports instructor edits/regeneration, and locks the script after final sign-off.
+
+## Prerequisites
+
+- Python 3.11+
+- `uv`
+- Node.js 20+
+- npm
+- Anthropic API key
+
+Install `uv` if needed:
+
+```bash
+curl -LsSf https://astral.sh/uv/install.sh | sh
+```
+
+## Repository Setup
+
+From the repository root:
 
 ```bash
 uv sync
 cp .env.example .env
 ```
 
-Set `ANTHROPIC_API_KEY` in `.env`.
-
-## Run Backend
+Set the Anthropic key in `.env`:
 
 ```bash
-uv run uvicorn scaler_script_pipeline.main:app --reload
+ANTHROPIC_API_KEY=your_key_here
+ANTHROPIC_MODEL=claude-opus-4-8
+DATABASE_URL=sqlite:///./data/script_pipeline.db
+MODEL_JUDGE_ENABLED=true
 ```
 
-Open API docs at `http://127.0.0.1:8000/docs`.
-
-## Run Frontend
-
-In a second terminal:
+Frontend setup:
 
 ```bash
 cd frontend
 npm install
-npm run dev
 ```
 
-Open `http://127.0.0.1:5173`.
+## Run The App
 
-The frontend defaults to `http://127.0.0.1:8000` for the API. Override with:
+Terminal 1, backend:
 
 ```bash
-VITE_API_BASE=http://127.0.0.1:8000 npm run dev
+cd /path/to/scaler_ai_assignment
+uv run uvicorn scaler_script_pipeline.main:app --host 127.0.0.1 --port 8000 --reload
 ```
 
-## Main Endpoints
+Backend API docs:
 
 ```text
-GET    /health
-POST   /projects
-GET    /projects
-GET    /projects/{project_id}
-POST   /projects/{project_id}/segments/{segment_id}/edit
-POST   /projects/{project_id}/segments/{segment_id}/regenerate
-POST   /projects/{project_id}/evaluate
-POST   /projects/{project_id}/sign-off
-GET    /projects/{project_id}/export/markdown
+http://127.0.0.1:8000/docs
 ```
 
-`POST /projects` runs the full generation pipeline before returning:
+Terminal 2, frontend:
+
+```bash
+cd /path/to/scaler_ai_assignment/frontend
+npm run dev -- --host 127.0.0.1 --port 5173
+```
+
+Open:
 
 ```text
-validate brief
--> generate outline
--> generate segment drafts
--> repair obvious segment-local failures once
--> run evaluation
--> if eval fails, plan targeted segment repairs and regenerate affected segments once
--> rerun evaluation
--> return READY_FOR_REVIEW or NEEDS_REVISION
+http://127.0.0.1:5173
 ```
 
-The frontend displays the project only after it has been generated and evaluated, so instructors do not review raw model output.
-
-## Run Evals
-
-The eval harness is designed for repeatable regression testing: scenario files, timestamped result directories, raw generated artifacts, a Markdown report, and a process exit code gate.
-
-Structural-only evals skip judge calls:
+The frontend defaults to `http://127.0.0.1:8000`. To override:
 
 ```bash
-uv run python scripts/run_evals.py --structural-only
+VITE_API_BASE=http://127.0.0.1:8000 npm run dev -- --host 127.0.0.1 --port 5173
 ```
 
-Run one case:
+## First Request Schema
 
-```bash
-uv run python scripts/run_evals.py --structural-only --case postgres_beginner
-```
-
-Committed sample outputs and a passing full judge eval report are available under:
-
-```text
-sample_outputs/projects/
-sample_outputs/scripts/
-sample_outputs/final_eval/report.md
-sample_outputs/final_eval/results.json
-```
-
-Re-evaluate saved project JSON without regenerating:
-
-```bash
-uv run python scripts/run_evals.py \
-  --structural-only \
-  --case postgres_beginner \
-  --from-projects eval/fixtures/projects
-```
-
-Full evals include the LLM judge and level-adaptivity pair judge:
-
-```bash
-uv run python scripts/run_evals.py
-```
-
-Outputs are written to:
-
-```text
-eval/results/<model>/<timestamp>/
-  report.md
-  results.json
-  projects/
-  scripts/
-```
-
-The deterministic guardrails check agenda coverage, timing, content/code ratio, stable segment IDs, required topic coverage, prior-topic re-teaching, checkpoint presence, live-code presence, and reviewer rationale coverage.
-
-## Example Brief
+`POST /projects` accepts:
 
 ```json
 {
@@ -138,7 +99,373 @@ The deterministic guardrails check agenda coverage, timing, content/code ratio, 
 }
 ```
 
-## Design Docs
+Required fields:
+
+- `topic`
+- `agenda`
+- `beginner_percentage`
+- `advanced_percentage`
+- `duration_minutes`
+- `content_percentage`
+- `code_percentage`
+
+Optional field:
+
+- `topics_already_covered`, default `[]`
+
+Validation behavior:
+
+- Audience percentages must sum to 100.
+- Content/code percentages must sum to 100.
+- Duration supports 5 to 240 minutes.
+- Dense agendas and short code-heavy lessons are warnings, not hard failures.
+- Missing prior topics is allowed and becomes a warning so the generator does not invent callbacks.
+
+## Application Flow
+
+`POST /projects` runs the complete synchronous generation pipeline:
+
+```text
+validate brief
+-> generate class outline
+-> generate segment drafts
+-> repair obvious segment-local failures once
+-> run evaluation
+-> if eval fails, plan targeted segment repairs and regenerate affected segments once
+-> rerun evaluation
+-> return READY_FOR_REVIEW or NEEDS_REVISION
+```
+
+The frontend displays the project only after generation and evaluation complete, so instructors do not review raw unevaluated model output.
+
+Saved state is persisted to SQLite after major checkpoints:
+
+- project creation
+- validation
+- outline generation
+- each generated segment
+- evaluation
+- repair attempts
+- final status
+- instructor edits/regeneration/sign-off
+
+If generation fails midway, the failed project remains inspectable with any outline/segments already saved.
+
+## Main Endpoints
+
+```text
+GET    /health
+POST   /projects
+GET    /projects
+GET    /projects/{project_id}
+POST   /projects/{project_id}/segments/{segment_id}/edit
+POST   /projects/{project_id}/segments/{segment_id}/regenerate
+POST   /projects/{project_id}/evaluate
+POST   /projects/{project_id}/sign-off
+GET    /projects/{project_id}/export/markdown
+```
+
+After sign-off, the backend rejects edit/regenerate calls with `409 Conflict`. The frontend also disables edit/regenerate controls for signed-off projects.
+
+## Frontend Features
+
+- Empty instructor brief form with example placeholders.
+- Project browser for previously generated projects.
+- Segment sidebar.
+- Inline teachable script rendering.
+- Inline live-code/checkpoint/activity placement using `[CODE_STEP]`, `[CHECKPOINT]`, and `[ACTIVITY]` markers.
+- Worked examples, transitions, recap, and next steps.
+- Previous/next segment navigation.
+- Segment edit flow.
+- Segment-level regeneration flow.
+- Evaluation panel.
+- Review history.
+- Final sign-off and markdown export.
+
+## Module Guide
+
+Backend:
+
+```text
+src/scaler_script_pipeline/main.py
+  FastAPI app creation, CORS, request logging.
+
+src/scaler_script_pipeline/api/routes.py
+  HTTP routes for projects, segment edits/regeneration, evaluation, sign-off, export.
+
+src/scaler_script_pipeline/api/dependencies.py
+  Wires settings, repository, Claude client, validator, evaluator, and pipeline.
+
+src/scaler_script_pipeline/core/config.py
+  Environment-backed settings from .env.
+
+src/scaler_script_pipeline/core/models.py
+  Pydantic domain models: InstructorBrief, ClassOutline, SegmentDraft, EvaluationReport, ReviewEvent, SignOff.
+
+src/scaler_script_pipeline/storage/repository.py
+  SQLite persistence using SQLAlchemy. Stores project JSON blobs.
+
+src/scaler_script_pipeline/services/validator.py
+  Hard validation errors and soft pedagogical warnings for instructor briefs.
+
+src/scaler_script_pipeline/services/prompts.py
+  Prompt builders for outline generation, segment generation, regeneration, judging, and repair planning.
+
+src/scaler_script_pipeline/services/claude.py
+  Anthropic API wrapper with structured JSON parsing and request logging.
+
+src/scaler_script_pipeline/services/evaluator.py
+  Runtime deterministic checks and optional model judge gate.
+
+src/scaler_script_pipeline/services/pipeline.py
+  Main orchestration: generate, repair, evaluate, edit, regenerate, sign off, export.
+```
+
+Eval harness:
+
+```text
+scripts/run_evals.py
+  CLI entrypoint for eval runs.
+
+src/scaler_script_pipeline/evals/types.py
+  Eval scenario, guardrail, judge result, pairwise adaptivity result models.
+
+src/scaler_script_pipeline/evals/structural.py
+  Deterministic guardrails.
+
+src/scaler_script_pipeline/evals/judge.py
+  LLM-as-judge prompts for script quality and level adaptivity.
+
+src/scaler_script_pipeline/evals/runner.py
+  Loads scenarios, generates or loads projects, runs guardrails/judges, writes artifacts.
+
+src/scaler_script_pipeline/evals/reporter.py
+  Markdown and JSON eval report generation.
+
+eval/scenarios/script-generation-cases.json
+  Script-generation eval scenarios.
+
+eval/scenarios/level-adaptivity-pairs.json
+  Beginner-vs-advanced pairwise adaptivity eval definitions.
+```
+
+Frontend:
+
+```text
+frontend/src/App.tsx
+  Main React app, brief form, project browser, review workspace, segment panel, sign-off UI.
+
+frontend/src/App.css
+  Application styling.
+
+frontend/src/api.ts
+  Backend API client.
+
+frontend/src/types.ts
+  TypeScript representations of backend response models.
+
+frontend/src/main.tsx
+  React entrypoint.
+```
+
+Docs and artifacts:
+
+```text
+DESIGN.md
+  Backend architecture and class hierarchy.
+
+FRONTEND_DESIGN.md
+  Frontend interaction model and screen flow.
+
+sample_outputs/projects/
+  Committed generated project JSON for three scenarios.
+
+sample_outputs/scripts/
+  Committed generated markdown scripts for three scenarios.
+
+sample_outputs/final_eval/
+  Committed full eval report and JSON results.
+```
+
+## Run Checks
+
+Backend syntax/import check:
+
+```bash
+uv run python -m compileall src scripts
+```
+
+Frontend production build:
+
+```bash
+cd frontend
+npm run build
+```
+
+Optional frontend lint:
+
+```bash
+cd frontend
+npm run lint
+```
+
+## Run Evals
+
+The eval harness writes timestamped artifacts to:
+
+```text
+eval/results/<model>/<timestamp>/
+  report.md
+  results.json
+  projects/
+  scripts/
+```
+
+These generated eval results are ignored by git. Stable submission artifacts are committed under `sample_outputs/`.
+
+### Fast Deterministic Eval
+
+Runs local guardrails only. No Claude judge calls.
+
+```bash
+uv run python scripts/run_evals.py \
+  --structural-only \
+  --from-projects sample_outputs/projects
+```
+
+Run one deterministic eval case:
+
+```bash
+uv run python scripts/run_evals.py \
+  --structural-only \
+  --case postgres_beginner \
+  --from-projects sample_outputs/projects
+```
+
+### Full Judge Eval From Saved Outputs
+
+Runs deterministic guardrails plus LLM judges, but does not regenerate projects.
+
+```bash
+uv run python scripts/run_evals.py \
+  --from-projects sample_outputs/projects
+```
+
+Run one full judge case:
+
+```bash
+uv run python scripts/run_evals.py \
+  --case postgres_beginner \
+  --from-projects sample_outputs/projects
+```
+
+### Fresh Generation Eval
+
+Regenerates outputs from scenarios. This is slow because it calls Claude for outline and segment generation.
+
+```bash
+uv run python scripts/run_evals.py --structural-only
+```
+
+Fresh generation plus LLM judges:
+
+```bash
+uv run python scripts/run_evals.py
+```
+
+Run one fresh scenario:
+
+```bash
+uv run python scripts/run_evals.py \
+  --structural-only \
+  --case react_short_code_heavy
+```
+
+Available case IDs:
+
+```text
+postgres_beginner
+postgres_advanced
+react_short_code_heavy
+```
+
+The deterministic guardrails check:
+
+- agenda coverage
+- timing sum
+- content/code ratio
+- stable segment IDs
+- required term coverage
+- prior-topic re-teaching
+- checkpoint/activity presence
+- live-code presence when code is required
+- reviewer rationale coverage
+
+The LLM judge checks:
+
+- coverage
+- faithfulness
+- level fit
+- pedagogy
+- teachability
+- pacing
+- tone
+- code quality
+- reviewability
+- beginner-vs-advanced adaptivity
+
+## Committed Eval Evidence
+
+Final committed eval report:
+
+```text
+sample_outputs/final_eval/report.md
+```
+
+Latest committed result summary:
+
+```text
+Cases passed: 3/3
+Pairs passed: 1/1
+Gate: PASS
+```
+
+## Logs
+
+The backend logs to the terminal running Uvicorn. Logs include:
+
+- HTTP request start/end with request ID and elapsed time
+- project generation start/end/failure
+- validation warning/error counts
+- outline generation
+- segment generation progress
+- Claude request start/end/error
+- structural eval results
+- model judge scores
+- repair planning and repair attempts
+- edits/regeneration/sign-off
+
+## Data And Secrets
+
+Ignored local files:
+
+```text
+.env
+data/
+eval/results/
+frontend/node_modules/
+frontend/dist/
+```
+
+SQLite database defaults to:
+
+```text
+data/script_pipeline.db
+```
+
+Never commit `.env`; use `.env.example` as the public template.
+
+## Design Documents
 
 - `DESIGN.md`
 - `FRONTEND_DESIGN.md`
