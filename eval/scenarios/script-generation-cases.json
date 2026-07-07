@@ -1,0 +1,78 @@
+[
+  {
+    "case_id": "postgres_beginner",
+    "category": "level_adaptivity",
+    "brief": {
+      "topic": "Indexing in PostgreSQL",
+      "agenda": [
+        "Why indexes exist",
+        "B-tree index mechanics",
+        "Reading EXPLAIN plans",
+        "Choosing indexes for common queries"
+      ],
+      "beginner_percentage": 80,
+      "advanced_percentage": 20,
+      "duration_minutes": 90,
+      "content_percentage": 60,
+      "code_percentage": 40,
+      "topics_already_covered": ["basic SQL", "primary keys"]
+    },
+    "expectations": {
+      "must_cover": ["indexes", "B-tree", "EXPLAIN", "query patterns"],
+      "must_not_reteach": ["basic SQL", "primary keys"],
+      "expected_level": "beginner-heavy",
+      "min_model_score": 3.75
+    }
+  },
+  {
+    "case_id": "postgres_advanced",
+    "category": "level_adaptivity",
+    "brief": {
+      "topic": "Indexing in PostgreSQL",
+      "agenda": [
+        "Why indexes exist",
+        "B-tree index mechanics",
+        "Reading EXPLAIN plans",
+        "Choosing indexes for common queries"
+      ],
+      "beginner_percentage": 20,
+      "advanced_percentage": 80,
+      "duration_minutes": 90,
+      "content_percentage": 60,
+      "code_percentage": 40,
+      "topics_already_covered": ["basic SQL", "primary keys"]
+    },
+    "expectations": {
+      "must_cover": ["indexes", "B-tree", "EXPLAIN", "query patterns"],
+      "must_not_reteach": ["basic SQL", "primary keys"],
+      "expected_level": "advanced-heavy",
+      "min_model_score": 3.75
+    }
+  },
+  {
+    "case_id": "react_short_code_heavy",
+    "category": "constraint_tension",
+    "brief": {
+      "topic": "State Management in React",
+      "agenda": [
+        "Local component state",
+        "Derived state",
+        "Prop drilling",
+        "Context API",
+        "Reducer pattern"
+      ],
+      "beginner_percentage": 65,
+      "advanced_percentage": 35,
+      "duration_minutes": 45,
+      "content_percentage": 40,
+      "code_percentage": 60,
+      "topics_already_covered": ["React components", "props", "event handlers"]
+    },
+    "expectations": {
+      "must_cover": ["local state", "derived state", "prop drilling", "Context", "reducer"],
+      "must_not_reteach": ["React components", "props"],
+      "expected_level": "beginner-heavy",
+      "min_model_score": 3.75
+    }
+  }
+]
