@@ -62,7 +62,7 @@ class InstructorBrief(BaseModel):
     agenda: list[str] = Field(..., min_length=1, max_length=20)
     beginner_percentage: int = Field(..., ge=0, le=100)
     advanced_percentage: int = Field(..., ge=0, le=100)
-    duration_minutes: int = Field(..., ge=15, le=240)
+    duration_minutes: int = Field(..., ge=5, le=240)
     content_percentage: int = Field(..., ge=0, le=100)
     code_percentage: int = Field(..., ge=0, le=100)
     topics_already_covered: list[str] = Field(default_factory=list)

@@ -336,7 +336,7 @@ function BriefForm({
         <div className="two-col">
           <NumberInput label="Beginner %" value={brief.beginner_percentage} onChange={(value) => setBrief({ ...brief, beginner_percentage: value })} />
           <NumberInput label="Advanced %" value={brief.advanced_percentage} onChange={(value) => setBrief({ ...brief, advanced_percentage: value })} />
-          <NumberInput label="Duration" value={brief.duration_minutes} onChange={(value) => setBrief({ ...brief, duration_minutes: value })} />
+          <NumberInput label="Duration" value={brief.duration_minutes} min={5} max={240} onChange={(value) => setBrief({ ...brief, duration_minutes: value })} />
           <NumberInput label="Content %" value={brief.content_percentage} onChange={(value) => setBrief({ ...brief, content_percentage: value })} />
           <NumberInput label="Code %" value={brief.code_percentage} onChange={(value) => setBrief({ ...brief, code_percentage: value })} />
         </div>
@@ -371,16 +371,26 @@ function parseMultilineList(value: string) {
 function NumberInput({
   label,
   value,
+  min,
+  max,
   onChange,
 }: {
   label: string
   value: number
+  min?: number
+  max?: number
   onChange: (value: number) => void
 }) {
   return (
     <label>
       {label}
-      <input type="number" value={value} onChange={(event) => onChange(Number(event.target.value))} />
+      <input
+        type="number"
+        min={min}
+        max={max}
+        value={value}
+        onChange={(event) => onChange(Number(event.target.value))}
+      />
     </label>
   )
 }
