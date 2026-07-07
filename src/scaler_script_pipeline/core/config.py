@@ -8,6 +8,8 @@ class Settings(BaseSettings):
     anthropic_model: str = "claude-4-8-opus"
     database_url: str = "sqlite:///./data/script_pipeline.db"
     model_judge_enabled: bool = True
+    trace_dir: str = "./data/traces"
+    trace_enabled: bool = True
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 
@@ -15,4 +17,3 @@ class Settings(BaseSettings):
 @lru_cache
 def get_settings() -> Settings:
     return Settings()
-

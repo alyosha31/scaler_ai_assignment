@@ -17,11 +17,14 @@ import {
   createProject,
   editSegment,
   getProject,
+  listTraces,
   listProjects,
   markdownExportUrl,
   regenerateSegment,
   signOffProject,
+  traceUrl,
 } from './api'
+import type { TraceSummary } from './api'
 import type { InstructorBrief, ScriptProject, SegmentDraft, SegmentOutline } from './types'
 
 type BriefFormState = Omit<
@@ -212,6 +215,7 @@ function App() {
               }}
             />
             <RecapNextPanel project={project} />
+            <TracePanel project={project} />
             <ReviewHistory project={project} />
           </aside>
         </div>
@@ -835,6 +839,49 @@ function RecapNextPanel({ project }: { project: ScriptProject }) {
         <strong>Next</strong>
         <p className="muted">{project.outline.next_steps_plan}</p>
       </div>
+    </div>
+  )
+}
+
+function TracePanel({ project }: { project: ScriptProject }) {
+  const [traces, setTraces] = useState<TraceSummary[]>([])
+  const [loading, setLoading] = useState(false)
+
+  async function refreshTraces() {
+    setLoading(true)
+    try {
+      setTraces(await listTraces(project.id))
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    void refreshTraces()
+  }, [project.id])
+
+  return (
+    <div className="panel">
+      <div className="panel-title-row">
+        <h2>Traces</h2>
+        <button className="icon-button" type="button" onClick={refreshTraces} title="Refresh traces">
+          {loading ? <Loader2 className="spin" size={15} /> : <RefreshCw size={15} />}
+        </button>
+      </div>
+      {traces.length === 0 ? (
+        <p className="muted">Model call traces will appear after generation.</p>
+      ) : (
+        <ul className="event-list">
+          {traces.map((trace) => (
+            <li key={trace.trace_id}>
+              <a href={traceUrl(trace.trace_id)} target="_blank" rel="noreferrer">
+                <strong>{trace.name}</strong>
+              </a>
+              <span>{trace.status} · {trace.elapsed_ms} ms · {trace.response_model}</span>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   )
 }

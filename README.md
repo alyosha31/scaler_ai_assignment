@@ -34,6 +34,8 @@ ANTHROPIC_API_KEY=your_key_here
 ANTHROPIC_MODEL=claude-opus-4-8
 DATABASE_URL=sqlite:///./data/script_pipeline.db
 MODEL_JUDGE_ENABLED=true
+TRACE_ENABLED=true
+TRACE_DIR=./data/traces
 ```
 
 Frontend setup:
@@ -163,6 +165,8 @@ POST   /projects/{project_id}/segments/{segment_id}/regenerate
 POST   /projects/{project_id}/evaluate
 POST   /projects/{project_id}/sign-off
 GET    /projects/{project_id}/export/markdown
+GET    /traces
+GET    /traces/{trace_id}
 ```
 
 After sign-off, the backend rejects edit/regenerate calls with `409 Conflict`. The frontend also disables edit/regenerate controls for signed-off projects.
@@ -446,6 +450,53 @@ The backend logs to the terminal running Uvicorn. Logs include:
 - repair planning and repair attempts
 - edits/regeneration/sign-off
 
+## Traces And Observability
+
+The app writes local LangSmith-style trace artifacts for every Claude call when `TRACE_ENABLED=true`.
+
+Trace files are stored as JSON under:
+
+```text
+data/traces/
+```
+
+Each trace contains:
+
+- trace id
+- span name, such as `outline_generation`, `segment_generation`, `runtime_model_judge`
+- kind, currently `llm`
+- status
+- started/ended timestamps
+- elapsed milliseconds
+- project id and segment id metadata when available
+- model and response schema
+- full system prompt
+- full user prompt
+- schema requested from the model
+- raw model output
+- parsed Pydantic output
+- error details if parsing/API failed
+
+List recent traces:
+
+```bash
+curl -s "http://127.0.0.1:8000/traces?limit=20" | python -m json.tool
+```
+
+Filter traces for one project:
+
+```bash
+curl -s "http://127.0.0.1:8000/traces?project_id=project_123&limit=50" | python -m json.tool
+```
+
+Inspect one trace:
+
+```bash
+curl -s "http://127.0.0.1:8000/traces/trace_123" | python -m json.tool
+```
+
+This gives traceability across the generation pipeline: brief input, outline prompt/output, per-segment prompt/output, repair prompts, runtime judge calls, and offline eval judges.
+
 ## Data And Secrets
 
 Ignored local files:
@@ -454,6 +505,7 @@ Ignored local files:
 .env
 data/
 eval/results/
+data/traces/
 frontend/node_modules/
 frontend/dist/
 ```

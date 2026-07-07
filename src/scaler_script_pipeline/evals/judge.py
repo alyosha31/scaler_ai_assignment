@@ -82,6 +82,12 @@ class EvalJudge:
             SCRIPT_JUDGE_SYSTEM,
             script_judge_user(project, expected_level),
             ScriptJudgeResult,
+            trace_name="offline_script_judge",
+            trace_metadata={
+                "project_id": project.id,
+                "stage": "offline_script_judge",
+                "expected_level": expected_level,
+            },
         )
 
     def judge_adaptivity(
@@ -91,5 +97,10 @@ class EvalJudge:
             ADAPTIVITY_SYSTEM,
             adaptivity_user(beginner, advanced),
             AdaptivityJudgeResult,
+            trace_name="offline_adaptivity_judge",
+            trace_metadata={
+                "project_id": beginner.id,
+                "advanced_project_id": advanced.id,
+                "stage": "offline_adaptivity_judge",
+            },
         )
-

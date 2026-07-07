@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, Response
 
-from scaler_script_pipeline.api.dependencies import get_pipeline
+from scaler_script_pipeline.api.dependencies import get_pipeline, get_trace_store
 from scaler_script_pipeline.core.models import (
     ClaudeError,
     InstructorBrief,
@@ -10,6 +10,7 @@ from scaler_script_pipeline.core.models import (
     SignOffRequest,
 )
 from scaler_script_pipeline.services.pipeline import ScriptPipeline
+from scaler_script_pipeline.services.tracing import TraceStore
 
 router = APIRouter()
 
@@ -97,3 +98,23 @@ def export_markdown(
         media_type="text/markdown",
         headers={"Content-Disposition": f'attachment; filename="{project_id}.md"'},
     )
+
+
+@router.get("/traces")
+def list_traces(
+    limit: int = 50,
+    project_id: str | None = None,
+    trace_store: TraceStore = Depends(get_trace_store),
+) -> list[dict]:
+    return trace_store.list_traces(limit=limit, project_id=project_id)
+
+
+@router.get("/traces/{trace_id}")
+def get_trace(
+    trace_id: str,
+    trace_store: TraceStore = Depends(get_trace_store),
+) -> dict:
+    trace = trace_store.get_trace(trace_id)
+    if trace is None:
+        raise HTTPException(status_code=404, detail="Trace not found")
+    return trace

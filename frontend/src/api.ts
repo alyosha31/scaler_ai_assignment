@@ -61,3 +61,23 @@ export function signOffProject(projectId: string, instructor_name: string, final
 export function markdownExportUrl(projectId: string) {
   return `${API_BASE}/projects/${projectId}/export/markdown`
 }
+
+export type TraceSummary = {
+  trace_id: string
+  name: string
+  kind: string
+  status: string
+  started_at: string
+  elapsed_ms: number
+  project_id: string | null
+  segment_id: string | null
+  response_model: string | null
+}
+
+export function listTraces(projectId: string, limit = 12) {
+  return request<TraceSummary[]>(`/traces?project_id=${encodeURIComponent(projectId)}&limit=${limit}`)
+}
+
+export function traceUrl(traceId: string) {
+  return `${API_BASE}/traces/${traceId}`
+}

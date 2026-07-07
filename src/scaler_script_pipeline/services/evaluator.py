@@ -97,7 +97,13 @@ class EvaluationRunner:
             logger.info("eval.model_judge.skipped project_id=%s", project.id)
             return None
         logger.info("eval.model_judge.start project_id=%s", project.id)
-        result = self.claude.generate_model(judge_system_prompt(), judge_user_prompt(project), ModelJudgeResult)
+        result = self.claude.generate_model(
+            judge_system_prompt(),
+            judge_user_prompt(project),
+            ModelJudgeResult,
+            trace_name="runtime_model_judge",
+            trace_metadata={"project_id": project.id, "stage": "runtime_model_judge"},
+        )
         logger.info(
             "eval.model_judge.done project_id=%s avg_score=%.2f coverage=%.1f level_fit=%.1f pedagogy=%.1f",
             project.id,

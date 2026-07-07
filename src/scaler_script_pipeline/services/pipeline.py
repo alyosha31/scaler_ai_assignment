@@ -121,6 +121,8 @@ class ScriptPipeline:
             outline_system_prompt(),
             outline_user_prompt(brief, warning_messages),
             ClassOutline,
+            trace_name="outline_generation",
+            trace_metadata={"project_id": project.id, "stage": "outline"},
         )
         outline.warnings = validation.warnings + outline.warnings
         project.outline = outline
@@ -158,6 +160,13 @@ class ScriptPipeline:
                 segment_system_prompt(),
                 segment_user_prompt(brief, outline, segment_outline),
                 SegmentDraft,
+                trace_name="segment_generation",
+                trace_metadata={
+                    "project_id": project.id,
+                    "segment_id": segment_outline.id,
+                    "segment_order": index,
+                    "stage": "segment_generation",
+                },
             )
             draft.outline_id = segment_outline.id
             draft.duration_minutes = segment_outline.duration_minutes
@@ -179,6 +188,13 @@ class ScriptPipeline:
                     segment_system_prompt(),
                     regeneration_user_prompt(project, segment_outline, draft.instructor_narration, repair_prompt),
                     SegmentDraft,
+                    trace_name="segment_local_repair",
+                    trace_metadata={
+                        "project_id": project.id,
+                        "segment_id": segment_outline.id,
+                        "stage": "segment_local_repair",
+                        "failures": failures,
+                    },
                 )
                 repaired.outline_id = segment_outline.id
                 repaired.duration_minutes = segment_outline.duration_minutes
@@ -265,6 +281,8 @@ class ScriptPipeline:
             repair_planner_system_prompt(),
             repair_planner_user_prompt(project),
             RepairPlan,
+            trace_name="repair_plan",
+            trace_metadata={"project_id": project.id, "stage": "repair_plan"},
         )
         repairable = [issue for issue in plan.repairs if issue.scope == "segment" and issue.segment_id]
         logger.info(
@@ -297,6 +315,13 @@ class ScriptPipeline:
                     issue.repair_instruction,
                 ),
                 SegmentDraft,
+                trace_name="eval_repair_regeneration",
+                trace_metadata={
+                    "project_id": project.id,
+                    "segment_id": draft.id,
+                    "stage": "eval_repair_regeneration",
+                    "repair_issue": issue.issue,
+                },
             )
             regenerated.id = draft.id
             regenerated.outline_id = outline.id
@@ -413,6 +438,12 @@ class ScriptPipeline:
             segment_system_prompt(),
             regeneration_user_prompt(project, outline, draft.instructor_narration, regen.instruction),
             SegmentDraft,
+            trace_name="manual_segment_regeneration",
+            trace_metadata={
+                "project_id": project.id,
+                "segment_id": draft.id,
+                "stage": "manual_segment_regeneration",
+            },
         )
         regenerated.id = draft.id
         regenerated.outline_id = outline.id
