@@ -4,8 +4,8 @@ import queue
 from fastapi import APIRouter, Depends, HTTPException, Response
 from fastapi.responses import StreamingResponse
 
-from scaler_script_pipeline.api.dependencies import get_pipeline, get_trace_store
-from scaler_script_pipeline.core.models import (
+from ai_tutor.api.dependencies import get_pipeline, get_trace_store
+from ai_tutor.core.models import (
     ClaudeError,
     InstructorBrief,
     ScriptProject,
@@ -13,8 +13,8 @@ from scaler_script_pipeline.core.models import (
     SegmentRegenerateRequest,
     SignOffRequest,
 )
-from scaler_script_pipeline.services.pipeline import ScriptPipeline
-from scaler_script_pipeline.services.tracing import TraceStore
+from ai_tutor.services.pipeline import ScriptPipeline
+from ai_tutor.services.tracing import TraceStore
 
 router = APIRouter()
 

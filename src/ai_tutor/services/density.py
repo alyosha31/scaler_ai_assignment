@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import re
 
-from scaler_script_pipeline.core.models import ScriptProject, SegmentDraft
+from ai_tutor.core.models import ScriptProject, SegmentDraft
 
 MAX_WORDS_PER_CONTENT_MINUTE = 160
 MAX_CODE_STEPS_PER_CODE_MINUTE = 1.25

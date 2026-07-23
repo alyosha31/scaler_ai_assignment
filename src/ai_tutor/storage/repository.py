@@ -5,7 +5,7 @@ from pathlib import Path
 from sqlalchemy import DateTime, String, Text, create_engine, select
 from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column, sessionmaker
 
-from scaler_script_pipeline.core.models import ScriptProject, utcnow
+from ai_tutor.core.models import ScriptProject, utcnow
 
 
 class Base(DeclarativeBase):

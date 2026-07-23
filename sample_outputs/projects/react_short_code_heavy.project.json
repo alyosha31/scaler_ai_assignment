@@ -567,7 +567,7 @@
     "model_judge": null,
     "golden_comparison": {
       "comparison_method": "Blind pairwise preference against human-authored instructor scripts.",
-      "required_dataset": "A small set of real Scaler class scripts matched by topic and level.",
+      "required_dataset": "A small set of real AI Tutor class scripts matched by topic and level.",
       "blind_review_protocol": "Instructors compare anonymized generated and human scripts, then choose which is more teach-ready and whether either needs major edits.",
       "notes": "Documented as production eval path; not run in this take-home without golden scripts."
     },

@@ -4,7 +4,7 @@ import argparse
 import sys
 from pathlib import Path
 
-from scaler_script_pipeline.evals.runner import run_eval
+from ai_tutor.evals.runner import run_eval
 
 
 def parse_args() -> argparse.Namespace:

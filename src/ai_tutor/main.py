@@ -5,7 +5,7 @@ from uuid import uuid4
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 
-from scaler_script_pipeline.api.routes import router
+from ai_tutor.api.routes import router
 
 logger = logging.getLogger(__name__)
 
@@ -20,7 +20,7 @@ def configure_logging() -> None:
 def create_app() -> FastAPI:
     configure_logging()
     app = FastAPI(
-        title="Scaler Class Script Authoring Pipeline",
+        title="AI Tutor Class Script Authoring Pipeline",
         version="0.1.0",
         description="Outline-first backend for generating, evaluating, reviewing, and signing off class scripts.",
     )

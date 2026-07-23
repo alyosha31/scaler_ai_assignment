@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-from scaler_script_pipeline.core.models import ScriptProject
-from scaler_script_pipeline.evals.types import AdaptivityJudgeResult, ScriptJudgeResult
-from scaler_script_pipeline.services.claude import ClaudeClient
+from ai_tutor.core.models import ScriptProject
+from ai_tutor.evals.types import AdaptivityJudgeResult, ScriptJudgeResult
+from ai_tutor.services.claude import ClaudeClient
 
 
 SCRIPT_JUDGE_SYSTEM = """You are an expert reviewer of live-class instructor scripts.

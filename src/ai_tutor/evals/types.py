@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from pydantic import BaseModel, Field
 
-from scaler_script_pipeline.core.models import InstructorBrief, ScriptProject
+from ai_tutor.core.models import InstructorBrief, ScriptProject
 
 
 class EvalExpectations(BaseModel):

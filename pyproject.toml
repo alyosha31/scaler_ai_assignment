@@ -1,7 +1,7 @@
 [project]
-name = "scaler-script-pipeline"
+name = "ai-tutor"
 version = "0.1.0"
-description = "Outline-first class script authoring pipeline for Scaler's assignment"
+description = "Outline-first class script authoring pipeline for AI Tutor's personal project"
 readme = "README.md"
 authors = [
     { name = "nReal313", email = "mohitguleriaiit@gmail.com" }

@@ -1,4 +1,4 @@
-# Scaler Class Script Authoring Pipeline
+# AI Tutor Class Script Authoring Pipeline
 
 Outline-first application for generating, evaluating, reviewing, partially regenerating, and signing off instructor-ready live class scripts.
 
@@ -50,8 +50,8 @@ npm install
 Terminal 1, backend:
 
 ```bash
-cd /path/to/scaler_ai_assignment
-uv run uvicorn scaler_script_pipeline.main:app --host 127.0.0.1 --port 8000 --reload
+cd /path/to/ai_tutor
+uv run uvicorn ai_tutor.main:app --host 127.0.0.1 --port 8000 --reload
 ```
 
 Backend API docs:
@@ -63,7 +63,7 @@ http://127.0.0.1:8000/docs
 Terminal 2, frontend:
 
 ```bash
-cd /path/to/scaler_ai_assignment/frontend
+cd /path/to/ai_tutor/frontend
 npm run dev -- --host 127.0.0.1 --port 5173
 ```
 
@@ -191,37 +191,37 @@ After sign-off, the backend rejects edit/regenerate calls with `409 Conflict`. T
 Backend:
 
 ```text
-src/scaler_script_pipeline/main.py
+src/ai_tutor/main.py
   FastAPI app creation, CORS, request logging.
 
-src/scaler_script_pipeline/api/routes.py
+src/ai_tutor/api/routes.py
   HTTP routes for projects, segment edits/regeneration, evaluation, sign-off, export.
 
-src/scaler_script_pipeline/api/dependencies.py
+src/ai_tutor/api/dependencies.py
   Wires settings, repository, Claude client, validator, evaluator, and pipeline.
 
-src/scaler_script_pipeline/core/config.py
+src/ai_tutor/core/config.py
   Environment-backed settings from .env.
 
-src/scaler_script_pipeline/core/models.py
+src/ai_tutor/core/models.py
   Pydantic domain models: InstructorBrief, ClassOutline, SegmentDraft, EvaluationReport, ReviewEvent, SignOff.
 
-src/scaler_script_pipeline/storage/repository.py
+src/ai_tutor/storage/repository.py
   SQLite persistence using SQLAlchemy. Stores project JSON blobs.
 
-src/scaler_script_pipeline/services/validator.py
+src/ai_tutor/services/validator.py
   Hard validation errors and soft pedagogical warnings for instructor briefs.
 
-src/scaler_script_pipeline/services/prompts.py
+src/ai_tutor/services/prompts.py
   Prompt builders for outline generation, segment generation, regeneration, judging, and repair planning.
 
-src/scaler_script_pipeline/services/claude.py
+src/ai_tutor/services/claude.py
   Anthropic API wrapper with structured JSON parsing and request logging.
 
-src/scaler_script_pipeline/services/evaluator.py
+src/ai_tutor/services/evaluator.py
   Runtime deterministic checks and optional model judge gate.
 
-src/scaler_script_pipeline/services/pipeline.py
+src/ai_tutor/services/pipeline.py
   Main orchestration: generate, repair, evaluate, edit, regenerate, sign off, export.
 ```
 
@@ -231,19 +231,19 @@ Eval harness:
 scripts/run_evals.py
   CLI entrypoint for eval runs.
 
-src/scaler_script_pipeline/evals/types.py
+src/ai_tutor/evals/types.py
   Eval scenario, guardrail, judge result, pairwise adaptivity result models.
 
-src/scaler_script_pipeline/evals/structural.py
+src/ai_tutor/evals/structural.py
   Deterministic guardrails.
 
-src/scaler_script_pipeline/evals/judge.py
+src/ai_tutor/evals/judge.py
   LLM-as-judge prompts for script quality and level adaptivity.
 
-src/scaler_script_pipeline/evals/runner.py
+src/ai_tutor/evals/runner.py
   Loads scenarios, generates or loads projects, runs guardrails/judges, writes artifacts.
 
-src/scaler_script_pipeline/evals/reporter.py
+src/ai_tutor/evals/reporter.py
   Markdown and JSON eval report generation.
 
 eval/scenarios/script-generation-cases.json

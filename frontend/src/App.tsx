@@ -145,7 +145,7 @@ function App() {
     <main className="app-shell">
       <header className="topbar">
         <div>
-          <p className="eyebrow">Scaler assignment</p>
+          <p className="eyebrow">AI Tutor personal project</p>
           <h1>Class Script Authoring Pipeline</h1>
         </div>
         {project && (

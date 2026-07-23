@@ -1,12 +1,12 @@
 from functools import lru_cache
 
-from scaler_script_pipeline.core.config import get_settings
-from scaler_script_pipeline.services.claude import ClaudeClient
-from scaler_script_pipeline.services.evaluator import EvaluationRunner
-from scaler_script_pipeline.services.pipeline import ScriptPipeline
-from scaler_script_pipeline.services.tracing import TraceStore
-from scaler_script_pipeline.services.validator import BriefValidator
-from scaler_script_pipeline.storage.repository import ProjectRepository
+from ai_tutor.core.config import get_settings
+from ai_tutor.services.claude import ClaudeClient
+from ai_tutor.services.evaluator import EvaluationRunner
+from ai_tutor.services.pipeline import ScriptPipeline
+from ai_tutor.services.tracing import TraceStore
+from ai_tutor.services.validator import BriefValidator
+from ai_tutor.storage.repository import ProjectRepository
 
 
 @lru_cache

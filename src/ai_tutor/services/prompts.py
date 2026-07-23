@@ -2,12 +2,12 @@ from __future__ import annotations
 
 import json
 
-from scaler_script_pipeline.core.models import ClassOutline, InstructorBrief, ScriptProject, SegmentOutline
+from ai_tutor.core.models import ClassOutline, InstructorBrief, ScriptProject, SegmentOutline
 
 
 def outline_system_prompt() -> str:
     return (
-        "You are an expert Scaler class script planner. Create a structured teaching outline "
+        "You are an expert AI Tutor class script planner. Create a structured teaching outline "
         "that obeys duration, audience split, content/code ratio, agenda coverage, and prior knowledge. "
         "Be concrete and pedagogically ordered. Allocate time based on teachability, not topic count alone. "
         "Do not write the full script yet."

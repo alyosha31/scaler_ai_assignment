@@ -4,12 +4,12 @@ import json
 import hashlib
 from pathlib import Path
 
-from scaler_script_pipeline.core.config import Settings, get_settings
-from scaler_script_pipeline.core.models import GenerationStatus, ScriptProject
-from scaler_script_pipeline.evals.judge import EvalJudge
-from scaler_script_pipeline.evals.reporter import create_run_dir, write_report
-from scaler_script_pipeline.evals.structural import has_red_line_failures, run_guardrails
-from scaler_script_pipeline.evals.types import (
+from ai_tutor.core.config import Settings, get_settings
+from ai_tutor.core.models import GenerationStatus, ScriptProject
+from ai_tutor.evals.judge import EvalJudge
+from ai_tutor.evals.reporter import create_run_dir, write_report
+from ai_tutor.evals.structural import has_red_line_failures, run_guardrails
+from ai_tutor.evals.types import (
     CaseEvalResult,
     EvalRunResult,
     EvalScenario,
@@ -17,11 +17,11 @@ from scaler_script_pipeline.evals.types import (
     LevelAdaptivityPair,
     PairEvalResult,
 )
-from scaler_script_pipeline.services.claude import ClaudeClient
-from scaler_script_pipeline.services.evaluator import EvaluationRunner
-from scaler_script_pipeline.services.pipeline import ScriptPipeline
-from scaler_script_pipeline.services.validator import BriefValidator
-from scaler_script_pipeline.storage.repository import ProjectRepository
+from ai_tutor.services.claude import ClaudeClient
+from ai_tutor.services.evaluator import EvaluationRunner
+from ai_tutor.services.pipeline import ScriptPipeline
+from ai_tutor.services.validator import BriefValidator
+from ai_tutor.storage.repository import ProjectRepository
 
 
 def load_scenarios(path: Path, case_filter: str | None, max_cases: int | None) -> list[EvalScenario]:
@@ -223,7 +223,7 @@ def evaluate_pair(
 
 
 def prompt_hash() -> str:
-    prompt_file = Path("src/scaler_script_pipeline/services/prompts.py")
+    prompt_file = Path("src/ai_tutor/services/prompts.py")
     if not prompt_file.exists():
         return "unknown"
     return hashlib.sha256(prompt_file.read_bytes()).hexdigest()[:12]

@@ -182,7 +182,7 @@
       }
     ],
     "recap_plan": "Summarize the arc: indexes trade write/storage cost for read speed; B-trees enable log-time lookups, ranges, ordered scans, and index-only scans with leftmost-prefix rules; EXPLAIN/ANALYZE reveals what the planner actually does and where estimates go wrong; index choice follows from selectivity, query shape, and verified plans. Reinforce with a one-slide decision checklist.",
-    "next_steps_plan": "Point to next sessions and practice: GIN/GiST/BRIN index types, index maintenance (bloat, REINDEX), ANALYZE/statistics and planner tuning, and a hands-on assignment to profile and index a provided slow-query workload using EXPLAIN ANALYZE.",
+    "next_steps_plan": "Point to next sessions and practice: GIN/GiST/BRIN index types, index maintenance (bloat, REINDEX), ANALYZE/statistics and planner tuning, and a hands-on personal project to profile and index a provided slow-query workload using EXPLAIN ANALYZE.",
     "global_assumptions": [
       "Learners can write and read basic SQL SELECT/WHERE/ORDER BY queries",
       "Learners understand primary keys and that PKs are backed by a unique index",
@@ -470,7 +470,7 @@
     "model_judge": null,
     "golden_comparison": {
       "comparison_method": "Blind pairwise preference against human-authored instructor scripts.",
-      "required_dataset": "A small set of real Scaler class scripts matched by topic and level.",
+      "required_dataset": "A small set of real AI Tutor class scripts matched by topic and level.",
       "blind_review_protocol": "Instructors compare anonymized generated and human scripts, then choose which is more teach-ready and whether either needs major edits.",
       "notes": "Documented as production eval path; not run in this take-home without golden scripts."
     },

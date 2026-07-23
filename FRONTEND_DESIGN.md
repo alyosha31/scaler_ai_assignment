@@ -73,7 +73,7 @@ flowchart TD
 
 ## Screen 1: Brief Form
 
-Purpose: collect the assignment's structured input contract.
+Purpose: collect the personal project's structured input contract.
 
 Fields:
 
@@ -356,7 +356,7 @@ Recommended component choices:
 
 ## Requirement Mapping
 
-| Assignment requirement | Frontend support |
+| Personal project requirement | Frontend support |
 |---|---|
 | Submit structured brief | `BriefForm` |
 | View generated script | `ReviewWorkspace`, `SegmentReviewPanel` |

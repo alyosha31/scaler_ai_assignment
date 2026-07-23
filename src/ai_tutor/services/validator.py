@@ -1,4 +1,4 @@
-from scaler_script_pipeline.core.models import (
+from ai_tutor.core.models import (
     BriefValidationResult,
     InstructorBrief,
     ValidationErrorDetail,

@@ -2,17 +2,17 @@ from __future__ import annotations
 
 import logging
 
-from scaler_script_pipeline.core.config import Settings
-from scaler_script_pipeline.core.models import (
+from ai_tutor.core.config import Settings
+from ai_tutor.core.models import (
     EvaluationReport,
     GoldenComparisonPlan,
     ModelJudgeResult,
     ScriptProject,
     StructuralEvalResult,
 )
-from scaler_script_pipeline.services.claude import ClaudeClient
-from scaler_script_pipeline.services.density import project_density_failures
-from scaler_script_pipeline.services.prompts import judge_system_prompt, judge_user_prompt
+from ai_tutor.services.claude import ClaudeClient
+from ai_tutor.services.density import project_density_failures
+from ai_tutor.services.prompts import judge_system_prompt, judge_user_prompt
 
 logger = logging.getLogger(__name__)
 
@@ -136,7 +136,7 @@ class EvaluationRunner:
             model_judge=model_judge,
             golden_comparison=GoldenComparisonPlan(
                 comparison_method="Blind pairwise preference against human-authored instructor scripts.",
-                required_dataset="A small set of real Scaler class scripts matched by topic and level.",
+                required_dataset="A small set of real AI Tutor class scripts matched by topic and level.",
                 blind_review_protocol=(
                     "Instructors compare anonymized generated and human scripts, then choose which is "
                     "more teach-ready and whether either needs major edits."

@@ -5,7 +5,7 @@ import re
 
 from fastapi import HTTPException
 
-from scaler_script_pipeline.core.models import (
+from ai_tutor.core.models import (
     ClassOutline,
     DraftStatus,
     GenerationStatus,
@@ -22,9 +22,9 @@ from scaler_script_pipeline.core.models import (
     SignOff,
     SignOffRequest,
 )
-from scaler_script_pipeline.services.claude import ClaudeClient
-from scaler_script_pipeline.services.evaluator import EvaluationRunner
-from scaler_script_pipeline.services.prompts import (
+from ai_tutor.services.claude import ClaudeClient
+from ai_tutor.services.evaluator import EvaluationRunner
+from ai_tutor.services.prompts import (
     outline_system_prompt,
     outline_user_prompt,
     repair_planner_system_prompt,
@@ -33,8 +33,8 @@ from scaler_script_pipeline.services.prompts import (
     segment_system_prompt,
     segment_user_prompt,
 )
-from scaler_script_pipeline.services.validator import BriefValidator
-from scaler_script_pipeline.storage.repository import ProjectRepository
+from ai_tutor.services.validator import BriefValidator
+from ai_tutor.storage.repository import ProjectRepository
 
 logger = logging.getLogger(__name__)
 

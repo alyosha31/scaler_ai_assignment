@@ -346,7 +346,7 @@ Persist:
 - evaluation reports
 - final sign-off
 
-For the assignment MVP, SQLite is the right persistence choice: simple to run locally, structured enough for review events and versions, and easier to explain than a full production database.
+For the personal project MVP, SQLite is the right persistence choice: simple to run locally, structured enough for review events and versions, and easier to explain than a full production database.
 
 ## Partial Regeneration Contract
 
@@ -375,7 +375,7 @@ The model supplies intent. The application supplies the trusted state.
 
 ## Evaluation Gate
 
-A draft can be shown to the instructor only after the evaluation runner executes. For the assignment, the gate is:
+A draft can be shown to the instructor only after the evaluation runner executes. For the personal project, the gate is:
 
 - no blocking structural failures
 - all agenda items covered
@@ -384,7 +384,7 @@ A draft can be shown to the instructor only after the evaluation runner executes
 - prior topics not substantially re-taught
 - model judge average above threshold
 
-The golden comparison is included as a designed production path because real instructor scripts are not available inside this assignment repo.
+The golden comparison is included as a designed production path because real instructor scripts are not available inside this personal project repo.
 
 ## MVP Scope
 
@@ -417,7 +417,7 @@ Document, but do not require real data for:
 
 ## Requirement Mapping
 
-| Assignment requirement | Design support |
+| Personal project requirement | Design support |
 |---|---|
 | Structured instructor brief | `InstructorBrief` |
 | Missing optional prior topics | default `topics_already_covered = []` |

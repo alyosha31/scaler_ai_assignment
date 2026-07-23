@@ -8,9 +8,9 @@ from typing import TypeVar
 from anthropic import Anthropic, AnthropicError
 from pydantic import BaseModel, ValidationError
 
-from scaler_script_pipeline.core.config import Settings
-from scaler_script_pipeline.core.models import ClaudeError
-from scaler_script_pipeline.services.tracing import TraceStore, TraceTimer
+from ai_tutor.core.config import Settings
+from ai_tutor.core.models import ClaudeError
+from ai_tutor.services.tracing import TraceStore, TraceTimer
 
 T = TypeVar("T", bound=BaseModel)
 logger = logging.getLogger(__name__)

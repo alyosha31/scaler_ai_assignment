@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-from scaler_script_pipeline.core.models import ScriptProject
-from scaler_script_pipeline.evals.types import EvalExpectations, GuardrailResult
-from scaler_script_pipeline.services.density import project_density_failures, project_density_summary
+from ai_tutor.core.models import ScriptProject
+from ai_tutor.evals.types import EvalExpectations, GuardrailResult
+from ai_tutor.services.density import project_density_failures, project_density_summary
 
 
 def run_guardrails(project: ScriptProject, expectations: EvalExpectations) -> list[GuardrailResult]:

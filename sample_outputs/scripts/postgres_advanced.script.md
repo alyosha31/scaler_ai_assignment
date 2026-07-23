@@ -383,4 +383,4 @@ Summarize the arc: indexes trade write/storage cost for read speed; B-trees enab
 
 ## Next
 
-Point to next sessions and practice: GIN/GiST/BRIN index types, index maintenance (bloat, REINDEX), ANALYZE/statistics and planner tuning, and a hands-on assignment to profile and index a provided slow-query workload using EXPLAIN ANALYZE.
+Point to next sessions and practice: GIN/GiST/BRIN index types, index maintenance (bloat, REINDEX), ANALYZE/statistics and planner tuning, and a hands-on personal project to profile and index a provided slow-query workload using EXPLAIN ANALYZE.

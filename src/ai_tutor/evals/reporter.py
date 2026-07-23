@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from scaler_script_pipeline.evals.types import EvalRunResult
+from ai_tutor.evals.types import EvalRunResult
 
 
 def write_report(run_dir: Path, result: EvalRunResult) -> Path:
